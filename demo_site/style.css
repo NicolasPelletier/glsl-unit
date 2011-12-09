@@ -9,8 +9,24 @@
   height: 600px;
 }
 
-#glsl-container {
+.glsl-input {
+  width: 33%;
+  height: 50%;
+}
+
+#fragment-container {
   float: left;
+  display: inline;
+  width: 33%;
+}
+
+#vertex-container {
+  float: left;
+  display: inline;
+  width: 33%;
+}
+
+#glsl-container {
   width: 33%;
   height: 100%;
 }
@@ -26,6 +42,18 @@
   float: right;
   display: inline;
   width: 25%;
+}
+
+#fragment-source-editor {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#vertex-source-editor {
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 #glsl-source-editor {
@@ -68,4 +96,16 @@
 
 #canvas-container {
   clear: left;
+}
+#status {
+  clear: left;
+}
+
+#compiled-container {
+  clear: left;
+}
+
+.compiled-source {
+  width: 33%;
+  height: 200px;
 }

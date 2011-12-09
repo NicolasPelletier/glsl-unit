@@ -35,14 +35,14 @@ glslunit.CallGraphVisitor = function() {
    * @type {Object.<string, Array.<string>>}
    * @private
    */
-  this.callGraph_ = {};
+  this.callGraph_ = {'root': []};
 
   /**
    * The name of the function currently being visited.
    * @type {?string}
    * @private
    */
-  this.currentFunctionName_ = null;
+  this.currentFunctionName_ = 'root';
 };
 goog.inherits(glslunit.CallGraphVisitor, glslunit.ASTVisitor);
 
@@ -71,7 +71,7 @@ glslunit.CallGraphVisitor.prototype.beforeVisitFunctionDeclaration =
  */
 glslunit.CallGraphVisitor.prototype.afterVisitFunctionDeclaration =
     function(node) {
-  this.currentFunctionName_ = null;
+  this.currentFunctionName_ = 'root';
 };
 
 
@@ -82,8 +82,10 @@ glslunit.CallGraphVisitor.prototype.afterVisitFunctionDeclaration =
  * @export
  */
 glslunit.CallGraphVisitor.prototype.visitFunctionCall = function(node) {
-  this.callGraph_[this.currentFunctionName_].push(node.function_name);
-  this.genericVisitor(node);
+  if (this.currentFunctionName_ in this.callGraph_) {
+    this.callGraph_[this.currentFunctionName_].push(node.function_name);
+    this.genericVisitor(node);
+  }
 };
 
 

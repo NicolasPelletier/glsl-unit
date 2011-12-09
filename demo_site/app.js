@@ -33,7 +33,7 @@ GLSLUnitExampleController.prototype.initGL = function() {
   var canvas = $('#test-canvas')[0];
   var opts = {
     'antialias': false,
-    'stencil': true, 
+    'stencil': true,
     'preserveDrawingBuffer': true
   };
   try {
@@ -46,7 +46,7 @@ GLSLUnitExampleController.prototype.initGL = function() {
   if (!this.gl) {
     alert('Sorry, it appears your browser does not support WebGL');
     return;
-  } 
+  }
 };
 
 GLSLUnitExampleController.prototype.initSamples = function($xhr) {
@@ -88,7 +88,7 @@ GLSLUnitExampleController.prototype.initTestFramework = function(testSuites) {
         suiteName, shader, suiteFn);
     };
     testSuites.push(newSuite);
-  };  
+  };
 }
 
 GLSLUnitExampleController.prototype.loadSelectedExample = function() {
@@ -97,26 +97,25 @@ GLSLUnitExampleController.prototype.loadSelectedExample = function() {
 };
 
 GLSLUnitExampleController.prototype.runTest = function() {
-	this.errorText = null;
-	this.lastTestRun = null;
+  this.errorText = null;
+  this.lastTestRun = null;
   var testSuitesConstructors = [];
   var testSuites = [];
   var shaderSourceStr = 'var shaderCode = [' + this.glslSource.split('\n').
                                                        map(function(x) {return '"' + x +'"'}).
                                                        join(',') + '].join("\\n");\n'
   this.initTestFramework(testSuitesConstructors);
-  
   // Run the test cases.
-  try { 
-  	eval(shaderSourceStr + this.testJsSource);
-	  var gl = this.gl;
-	  $(testSuitesConstructors).each(function(index) {
-	    var testSuite = this(gl);
-	    testSuite.run();
-	    testSuites.push(testSuite);
-	  }) ;
+  try {
+    eval(shaderSourceStr + this.testJsSource);
+    var gl = this.gl;
+    $(testSuitesConstructors).each(function(index) {
+      var testSuite = this(gl);
+      testSuite.run();
+      testSuites.push(testSuite);
+    }) ;
     this.lastTestRun = testSuites;
   } catch (e) {
-	  this.errorText = e.message;
+    this.errorText = e.message;
   }
 };

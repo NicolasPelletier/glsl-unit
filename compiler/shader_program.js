@@ -103,10 +103,4 @@ glslunit.compiler.ShaderProgram = function() {
    * @type {Object.<string, glslunit.compiler.ShaderUniformEntry>}
    */
   this.uniformMap = {};
-
-  /**
-   * Array of shader modes.
-   * @type {Array.<!glslunit.compiler.ShaderMode>}
-   */
-  this.shaderModes = [];
 };

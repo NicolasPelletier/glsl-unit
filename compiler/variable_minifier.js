@@ -53,6 +53,13 @@ glslunit.compiler.VariableMinifier = function() {
    * @private
    */
   this.maxNameId_ = 0;
+
+  /**
+   * Whether or not to rename public variables (uniforms and attributes)
+   * @type {boolean}
+   * @private
+   */
+  this.minifyPublicVariables_ = false;
 };
 goog.inherits(glslunit.compiler.VariableMinifier, glslunit.ASTTransformer);
 
@@ -87,9 +94,12 @@ glslunit.compiler.VariableMinifier.prototype.beforeTransformRoot =
       glslunit.VariableScopeVisitor.getVariablesInScope(node, node, true);
   for (var globalName in globals) {
     var globalQualifier = globals[globalName].typeAttribute.qualifier;
-    if (globalQualifier == 'varying' || globalQualifier == 'uniform') {
+    if (globalQualifier == 'varying' ||
+        (this.minifyPublicVariables_ && globalQualifier == 'uniform')) {
       this.currentNameGenerator_.shortenSymbol(globalName);
-    } else {
+    } else if (!(!this.minifyPublicVariables_ &&
+                 (globalQualifier == 'attribute' ||
+                  globalQualifier == 'uniform'))) {
       localGlobals.push(globalName);
     }
   }
@@ -242,12 +252,15 @@ glslunit.compiler.VariableMinifier.prototype.afterTransformFunctionPrototype =
  */
 glslunit.compiler.VariableMinifier.prototype.beforeTransformDeclaratorItem =
     function(node) {
-  var newName = this.currentNameGenerator_.shortenSymbol(node.name.name);
+  var newName = node.name.name;
   // If we've got a shader program specified and this identifier was a child
   // of a declarator node, store the renaming entry.
   if (this.shaderProgram_ && this.currentDeclaratorNode_) {
     var nodeType = this.currentDeclaratorNode_.typeAttribute.name;
     if (this.currentDeclaratorNode_.typeAttribute.qualifier == 'attribute') {
+      if (this.minifyPublicVariables_) {
+        newName = this.currentNameGenerator_.shortenSymbol(node.name.name);
+      }
       var attributeEntry = new glslunit.compiler.ShaderAttributeEntry();
       attributeEntry.shortName = newName;
       attributeEntry.originalName = node.name.name;
@@ -256,11 +269,16 @@ glslunit.compiler.VariableMinifier.prototype.beforeTransformDeclaratorItem =
       this.shaderProgram_.attributeMap[node.name.name] = attributeEntry;
     } else if (this.currentDeclaratorNode_.typeAttribute.qualifier ==
                'uniform') {
+      if (this.minifyPublicVariables_) {
+        newName = this.currentNameGenerator_.shortenSymbol(node.name.name);
+      }
       var uniformEntry = new glslunit.compiler.ShaderUniformEntry();
       uniformEntry.originalName = node.name.name;
       uniformEntry.shortName = newName;
       uniformEntry.type = nodeType;
       this.shaderProgram_.uniformMap[node.name.name] = uniformEntry;
+    } else {
+      this.currentNameGenerator_.shortenSymbol(node.name.name);
     }
   }
   return node;
