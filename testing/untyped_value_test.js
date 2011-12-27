@@ -23,6 +23,7 @@ goog.require('goog.testing.jsunit');
 
 function testAsArray() {
   var testValue = new glslunit.testing.UntypedValue('someVariable');
+  var typedValue = testValue.asArray([1, 2, 3, 4]);
   assertEquals('someVariable', testValue.getShaderVariable().name_);
   assertTrue(goog.array.equals(testValue.getShaderVariable().values_,
                                [1, 2, 3, 4]));

@@ -26,8 +26,7 @@ glslunit.compiler.CompilerStep.prototype.getName = function() {};
 
 /**
  * Gets the list of compiler steps this step depends on.
- * @return {Array.<function(new:glslunit.compiler.CompilerStep)>} The list of
- *     Compiler Steps this step depends on.
+ * @return {Array.<string>} The list of Compiler Steps this step depends on.
  */
 glslunit.compiler.CompilerStep.prototype.getDependencies = function() {};
 

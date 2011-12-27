@@ -79,7 +79,7 @@ function testVariableMinifier() {
     'mat3 g;' +
     'varying vec3 b;' +
     'void main(){}';
-  var minifier = new glslunit.compiler.VariableMinifier();
+  var minifier = new glslunit.compiler.VariableMinifier(true);
 
   var vertexAst = glslunit.glsl.parser.parse(vertexSource);
   var fragmentAst = glslunit.glsl.parser.parse(fragmentSource);
@@ -89,7 +89,48 @@ function testVariableMinifier() {
                glslunit.Generator.getSourceCode(vertexResult));
 
   var renamer = minifier.currentNameGenerator_;
-  minifier = new glslunit.compiler.VariableMinifier();
+  minifier = new glslunit.compiler.VariableMinifier(true);
+  minifier.currentNameGenerator_ = renamer;
+  var fragmentResult = minifier.transformNode(fragmentAst);
+  assertEquals(expectedFragment,
+               glslunit.Generator.getSourceCode(fragmentResult));
+}
+
+function testVariableMinifierNoMinifyPublic() {
+  var expectedVertex =
+    'float someMethod(const int b,float c);' +
+    'attribute vec3 attr,anotherAttr;' +
+    'void methodOrVariable(){}' +
+    'uniform float uGlobal;' +
+    'varying vec3 a;' +
+    'void main(){' +
+    'int b;' +
+    'int c;' +
+    'vec2 d;' +
+    'anotherMethod();' +
+    'someMethod(1,4.2);' +
+    '}' +
+    'float someMethod(const int b,float c){' +
+    'vec2 d;' +
+    'return attr+methodOrVariable+c+float(b)+12.4;' +
+    '}';
+  var expectedFragment =
+    'mat2 b,c,d,e;' +
+    'uniform float uGlobal;' +
+    'mat3 f;' +
+    'varying vec3 a;' +
+    'void main(){}';
+  var minifier = new glslunit.compiler.VariableMinifier(false);
+
+  var vertexAst = glslunit.glsl.parser.parse(vertexSource);
+  var fragmentAst = glslunit.glsl.parser.parse(fragmentSource);
+
+  var vertexResult = minifier.transformNode(vertexAst);
+  assertEquals(expectedVertex,
+               glslunit.Generator.getSourceCode(vertexResult));
+
+  var renamer = minifier.currentNameGenerator_;
+  minifier = new glslunit.compiler.VariableMinifier(false);
   minifier.currentNameGenerator_ = renamer;
   var fragmentResult = minifier.transformNode(fragmentAst);
   assertEquals(expectedFragment,

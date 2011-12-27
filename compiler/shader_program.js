@@ -68,18 +68,6 @@ glslunit.compiler.ShaderUniformEntry = function() {
  */
 glslunit.compiler.ShaderProgram = function() {
   /**
-   * The name of the Javascript class to be be generated.
-   * @type {string}
-   */
-  this.className = '';
-
-  /**
-   * The namespace of the generated class.
-   * @type {string}
-   */
-  this.namespace = '';
-
-  /**
    * The source code for the fragment shader for this program.
    * @type {!Object}
    */

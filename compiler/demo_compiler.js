@@ -28,13 +28,13 @@ glslunit.compiler.DemoCompiler.prototype.compileProgram = function() {
 
   var compiler = new glslunit.compiler.Compiler(shaderProgram);
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
-                        glslunit.compiler.DeadFunctionRemover);
+                        new glslunit.compiler.DeadFunctionRemover());
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
-                        glslunit.compiler.DeclarationConsolidation);
+                        new glslunit.compiler.DeclarationConsolidation(true));
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
-                        glslunit.compiler.VariableMinifier);
+                        new glslunit.compiler.VariableMinifier(false));
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
-                        glslunit.compiler.FunctionMinifier);
+                        new glslunit.compiler.FunctionMinifier());
 
   shaderProgram = compiler.compileProgram();
 

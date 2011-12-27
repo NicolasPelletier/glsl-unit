@@ -116,24 +116,33 @@ glslunit.compiler.FunctionMinifier.prototype.transformFunctionPrototype =
     glslunit.compiler.FunctionMinifier.prototype.transformFunctionDeclaration;
 
 
+/**
+ * The name of this compilation step.
+ * @type {string}
+ */
+glslunit.compiler.FunctionMinifier.NAME = 'Function Minifier';
+
+
 /** @override */
 glslunit.compiler.FunctionMinifier.prototype.getName = function() {
-  return 'Function Minifier';
+  return glslunit.compiler.FunctionMinifier.NAME;
 };
 
 
 /** @override */
 glslunit.compiler.FunctionMinifier.prototype.getDependencies =
     function() {
-  return [glslunit.compiler.VariableMinifier];
+  return [glslunit.compiler.VariableMinifier.NAME];
 };
 
 
 /** @override */
 glslunit.compiler.FunctionMinifier.prototype.performStep =
     function(stepOutputMap, shaderProgram) {
-  var maxVertexId = stepOutputMap['Variable Minifier']['vertexMaxId'];
-  var maxFragmentId = stepOutputMap['Variable Minifier']['fragmentMaxId'];
+  var maxVertexId =
+      stepOutputMap[glslunit.compiler.VariableMinifier.NAME]['vertexMaxId'];
+  var maxFragmentId =
+      stepOutputMap[glslunit.compiler.VariableMinifier.NAME]['fragmentMaxId'];
   var vertexTransformer = new glslunit.compiler.FunctionMinifier();
   vertexTransformer.nameGenerator_.nextNameIndex = maxVertexId;
 

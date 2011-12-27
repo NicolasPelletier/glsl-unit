@@ -20,7 +20,9 @@ function setUp() {
     'void bar(){}' +
     'void main(){foo();}' +
     'void uncalledFunction(){uncalledChildFunction();}' +
-    'void uncalledChildFunction(){}';
+    'void uncalledChildFunction(){}' +
+    'void aliveGlobal(){}' +
+    'float z=aliveGlobal();';
 }
 
 
@@ -30,7 +32,9 @@ function testDeadFunctionRemover() {
     'void bar();' +
     'void foo(){bar();}' +
     'void bar(){}' +
-    'void main(){foo();}';
+    'void main(){foo();}' +
+    'void aliveGlobal(){}' +
+    'float z=aliveGlobal();';
   var minifier = new glslunit.compiler.DeadFunctionRemover();
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);

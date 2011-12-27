@@ -48,6 +48,7 @@ glslunit.compiler.DeadFunctionRemover.prototype.beforeTransformRoot =
     this.functionAlive_[functionName] = false;
   }
   this.markAlive_('main', callGraph);
+  this.markAlive_(glslunit.CallGraphVisitor.ROOT_NAME, callGraph);
 };
 
 
@@ -100,9 +101,16 @@ glslunit.compiler.DeadFunctionRemover.prototype.transformFunctionPrototype =
         prototype.transformFunctionDeclaration;
 
 
+/**
+ * The name of this compilation step.
+ * @type {string}
+ */
+glslunit.compiler.DeadFunctionRemover.NAME = 'DeadFunctionRemover';
+
+
 /** @override */
 glslunit.compiler.DeadFunctionRemover.prototype.getName = function() {
-  return 'DeadFunctionRemover';
+  return glslunit.compiler.DeadFunctionRemover.NAME;
 };
 
 

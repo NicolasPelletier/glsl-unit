@@ -98,27 +98,12 @@ function testTernaryChild() {
         value: 0
       }
     }
-  }
+  };
   assertEquals('1.*(false?1.:0.)', glslunit.Generator.getSourceCode(testNode));
 }
 
 function testVisitBinaryWithParen() {
   var leftNode = {
-    type: 'binary',
-    operator: {
-      type: 'operator',
-      operator: '+'
-    },
-    left: {
-      type: 'identifier',
-      name: 'a'
-    },
-    right: {
-      type: 'identifier',
-      name: 'b'
-    }
-  };
-  var rightNode = {
     type: 'binary',
     operator: {
       type: 'operator',
@@ -129,9 +114,57 @@ function testVisitBinaryWithParen() {
       name: 'x'
     },
     right: {
-      type: 'function_call',
-      function_name: 'test',
-      parameters: []
+      type: 'binary',
+      operator: {
+        type: 'operator',
+        operator: '*'
+      },
+      left: {
+        type: 'identifier',
+        name: 'z'
+      },
+      right: {
+        type: 'binary',
+        operator: {
+          type: 'operator',
+          operator: '*'
+        },
+        left: {
+          type: 'identifier',
+          name: 'u'
+        },
+        right: {
+          type: 'function_call',
+          function_name: 'test',
+          parameters: []
+        }
+      }
+    }
+  };
+  var rightNode = {
+    type: 'binary',
+    operator: {
+      type: 'operator',
+      operator: '-'
+    },
+    left: {
+      type: 'identifier',
+      name: 'a'
+    },
+    right: {
+      type: 'binary',
+      operator: {
+        type: 'operator',
+        operator: '-'
+      },
+      left: {
+        type: 'identifier',
+        name: 'b'
+      },
+      right: {
+        type: 'identifier',
+        name: 'c'
+      }
     }
   };
   var testNode = {
@@ -143,7 +176,8 @@ function testVisitBinaryWithParen() {
     left: leftNode,
     right: rightNode
   };
-  assertEquals('(a+b)*x/test()', glslunit.Generator.getSourceCode(testNode));
+  assertEquals('x/(z*u*test())*(a-(b-c))',
+               glslunit.Generator.getSourceCode(testNode));
 }
 
 function testVisitValue() {
@@ -152,6 +186,16 @@ function testVisitValue() {
     value: 256
   };
   assertEquals('256', glslunit.Generator.getSourceCode(testNode));
+  var testNode = {
+    type: 'int',
+    value: 1099511627775
+  };
+  assertEquals('0xffffffffff', glslunit.Generator.getSourceCode(testNode));
+  var testNode = {
+    type: 'int',
+    value: -1099511627775
+  };
+  assertEquals('-0xffffffffff', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'bool',
     value: true
@@ -167,6 +211,26 @@ function testVisitValue() {
     value: 42
   };
   assertEquals('42.', glslunit.Generator.getSourceCode(testNode));
+  testNode = {
+    type: 'float',
+    value: 0.000001
+  };
+  assertEquals('1e-6', glslunit.Generator.getSourceCode(testNode));
+  testNode = {
+    type: 'float',
+    value: -0.00000523
+  };
+  assertEquals('-5.23e-6', glslunit.Generator.getSourceCode(testNode));
+  testNode = {
+    type: 'float',
+    value: 10000
+  };
+  assertEquals('1e4', glslunit.Generator.getSourceCode(testNode));
+  testNode = {
+    type: 'float',
+    value: 320000
+  };
+  assertEquals('3.2e5', glslunit.Generator.getSourceCode(testNode));
 }
 
 function testFunctionCall() {

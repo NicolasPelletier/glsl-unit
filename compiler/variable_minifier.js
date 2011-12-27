@@ -19,11 +19,13 @@ goog.require('goog.object');
 
 /**
  * Optimizer that reduces the size of variable and parameters.
+ * @param {boolean} minifyPublicVariables Whether or not to minify public
+ *     variables (uniforms and attributes).
  * @constructor
  * @extends {glslunit.ASTTransformer}
  * @implements {glslunit.compiler.CompilerStep}
  */
-glslunit.compiler.VariableMinifier = function() {
+glslunit.compiler.VariableMinifier = function(minifyPublicVariables) {
   goog.base(this);
 
   /**
@@ -55,11 +57,11 @@ glslunit.compiler.VariableMinifier = function() {
   this.maxNameId_ = 0;
 
   /**
-   * Whether or not to rename public variables (uniforms and attributes)
+   * Whether or not to rename public variables (uniforms and attributes).
    * @type {boolean}
    * @private
    */
-  this.minifyPublicVariables_ = false;
+  this.minifyPublicVariables_ = minifyPublicVariables;
 };
 goog.inherits(glslunit.compiler.VariableMinifier, glslunit.ASTTransformer);
 
@@ -98,9 +100,9 @@ glslunit.compiler.VariableMinifier.prototype.beforeTransformRoot =
         (this.minifyPublicVariables_ && globalQualifier == 'uniform')) {
       this.currentNameGenerator_.shortenSymbol(globalName);
     } else if (!(!this.minifyPublicVariables_ &&
-                 (globalQualifier == 'attribute' ||
-                  globalQualifier == 'uniform'))) {
-      localGlobals.push(globalName);
+                   (globalQualifier == 'attribute' ||
+                        globalQualifier == 'uniform'))) {
+        localGlobals.push(globalName);
     }
   }
   this.pushStack_(node);
@@ -253,32 +255,34 @@ glslunit.compiler.VariableMinifier.prototype.afterTransformFunctionPrototype =
 glslunit.compiler.VariableMinifier.prototype.beforeTransformDeclaratorItem =
     function(node) {
   var newName = node.name.name;
+  var qualifier;
+  if (this.currentDeclaratorNode_) {
+    qualifier = this.currentDeclaratorNode_.typeAttribute.qualifier;
+  }
+  // If we are minifying public variables or if this variable is not a public
+  // variable, then shorten it.
+  if (this.minifyPublicVariables_ ||
+          !(qualifier &&
+              (qualifier == 'attribute' || qualifier == 'uniform'))) {
+    newName = this.currentNameGenerator_.shortenSymbol(node.name.name);
+  }
   // If we've got a shader program specified and this identifier was a child
   // of a declarator node, store the renaming entry.
   if (this.shaderProgram_ && this.currentDeclaratorNode_) {
     var nodeType = this.currentDeclaratorNode_.typeAttribute.name;
-    if (this.currentDeclaratorNode_.typeAttribute.qualifier == 'attribute') {
-      if (this.minifyPublicVariables_) {
-        newName = this.currentNameGenerator_.shortenSymbol(node.name.name);
-      }
+    if (qualifier == 'attribute') {
       var attributeEntry = new glslunit.compiler.ShaderAttributeEntry();
       attributeEntry.shortName = newName;
       attributeEntry.originalName = node.name.name;
       var parsedSize = parseInt(nodeType.slice(3, 4), 10);
       attributeEntry.variableSize = isNaN(parsedSize) ? 1 : parsedSize;
       this.shaderProgram_.attributeMap[node.name.name] = attributeEntry;
-    } else if (this.currentDeclaratorNode_.typeAttribute.qualifier ==
-               'uniform') {
-      if (this.minifyPublicVariables_) {
-        newName = this.currentNameGenerator_.shortenSymbol(node.name.name);
-      }
+    } else if (qualifier == 'uniform') {
       var uniformEntry = new glslunit.compiler.ShaderUniformEntry();
       uniformEntry.originalName = node.name.name;
       uniformEntry.shortName = newName;
       uniformEntry.type = nodeType;
       this.shaderProgram_.uniformMap[node.name.name] = uniformEntry;
-    } else {
-      this.currentNameGenerator_.shortenSymbol(node.name.name);
     }
   }
   return node;
@@ -303,9 +307,16 @@ glslunit.compiler.VariableMinifier.prototype.transformIdentifier =
 };
 
 
+/**
+ * The name of this compilation step.
+ * @type {string}
+ */
+glslunit.compiler.VariableMinifier.NAME = 'VariableMinifier';
+
+
 /** @override */
 glslunit.compiler.VariableMinifier.prototype.getName = function() {
-  return 'Variable Minifier';
+  return glslunit.compiler.VariableMinifier.NAME;
 };
 
 
@@ -319,13 +330,15 @@ glslunit.compiler.VariableMinifier.prototype.getDependencies =
 /** @override */
 glslunit.compiler.VariableMinifier.prototype.performStep =
     function(stepOutputMap, shaderProgram) {
-  var vertexTransformer = new glslunit.compiler.VariableMinifier();
+  var vertexTransformer = new glslunit.compiler.VariableMinifier(
+      this.minifyPublicVariables_);
   vertexTransformer.setShaderProgram(shaderProgram);
   shaderProgram.vertexAst =
     vertexTransformer.transformNode(shaderProgram.vertexAst);
 
 
-  var fragmentTransformer = new glslunit.compiler.VariableMinifier();
+  var fragmentTransformer = new glslunit.compiler.VariableMinifier(
+      this.minifyPublicVariables_);
   fragmentTransformer.setShaderProgram(shaderProgram);
   // Set the fragment's rename map to the old rename map from the vertex shader
   // so their globals get renamed the same way.

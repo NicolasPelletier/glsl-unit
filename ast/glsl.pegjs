@@ -826,7 +826,7 @@ multiplicative_operator
 
 multiplicative_expression
   = head:unary_expression
-    tail:(_? multiplicative_operator _? multiplicative_expression)* {
+    tail:(_? multiplicative_operator _? unary_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -846,7 +846,7 @@ additive_operator
 
 additive_expression
   = head:multiplicative_expression
-    tail:(_? additive_operator _? additive_expression)* {
+    tail:(_? additive_operator _? multiplicative_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -860,7 +860,7 @@ shift_operator
 
 shift_expression
   = head:additive_expression
-    tail:(_? shift_operator _? shift_expression)* {
+    tail:(_? shift_operator _? additive_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -880,7 +880,7 @@ relational_operator
 
 relational_expression
   = head:shift_expression
-    tail:(_? relational_operator _? relational_expression)* {
+    tail:(_? relational_operator _? shift_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -894,7 +894,7 @@ equality_operator
 
 equality_expression
   = head:relational_expression
-    tail:(_? equality_operator _? equality_expression)* {
+    tail:(_? equality_operator _? relational_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -908,7 +908,7 @@ bitwise_and_operator
 
 bitwise_and_expression
   = head:equality_expression
-    tail:(_? bitwise_and_operator _? bitwise_and_expression)* {
+    tail:(_? bitwise_and_operator _? equality_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -922,7 +922,7 @@ bitwise_xor_operator
 
 bitwise_xor_expression
   = head:bitwise_and_expression
-    tail:(_? bitwise_xor_operator _? bitwise_xor_expression)* {
+    tail:(_? bitwise_xor_operator _? bitwise_and_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -936,7 +936,7 @@ bitwise_or_operator
 
 bitwise_or_expression
   = head:bitwise_xor_expression
-    tail:(_? bitwise_or_operator _? bitwise_or_expression)* {
+    tail:(_? bitwise_or_operator _? bitwise_xor_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -950,7 +950,7 @@ logical_and_operator
 
 logical_and_expression
   = head:bitwise_or_expression
-    tail:(_? logical_and_operator _? logical_and_expression)* {
+    tail:(_? logical_and_operator _? bitwise_or_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -964,7 +964,7 @@ logical_xor_operator
 
 logical_xor_expression
   = head:logical_and_expression
-    tail:(_? logical_xor_operator _? logical_xor_expression)* {
+    tail:(_? logical_xor_operator _? logical_and_expression)* {
       return daisy_chain(head, tail);
     }
 
@@ -978,7 +978,7 @@ logical_or_operator
 
 logical_or_expression
   = head:logical_xor_expression
-    tail:(_? logical_or_operator _? logical_or_expression)* {
+    tail:(_? logical_or_operator _? logical_xor_expression)* {
       return daisy_chain(head, tail);
     }
 
