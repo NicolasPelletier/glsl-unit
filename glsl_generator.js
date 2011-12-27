@@ -76,38 +76,146 @@ goog.inherits(glslunit.Generator, glslunit.ASTVisitor);
  */
 glslunit.Generator.INDENT_STR_ = '  ';
 
+
+/**
+ * Possible evaluation orders of operations.
+ * @enum {number}
+ * @private
+ */
+glslunit.Generator.EvaluationOrder_ = {
+  LTR: 0,
+  RTL: 1,
+  NA: 2
+};
+
+/**
+ * @param {number} precedence The precedence for this operation.
+ * @param {glslunit.Generator.EvaluationOrder_=} evaluationOrder The order which
+ *     the operations evaluated in for this operation.
+ * @param {boolean=} associative Whether or not this operation is associative.
+ * @param {number=} maxOperands The maximum number of operands this operator
+ *     can have.
+ * @private
+ * @constructor
+ */
+glslunit.Generator.OperationEvaluation_ = function(precedence,
+                                                   evaluationOrder,
+                                                   associative,
+                                                   maxOperands) {
+  /**
+   * The precedence for this operation.  Operations with lower values should
+   * be executed first and thus have higher precedence.
+   * @type {number}
+   */
+  this.precedence = precedence;
+
+  /**
+   * What order are the operations evaluated in for this operation.
+   * @type {glslunit.Generator.EvaluationOrder_}
+   */
+  this.evaluationOrder = evaluationOrder ||
+      glslunit.Generator.EvaluationOrder_.LTR;
+
+  /**
+   * Whether or not this operation is associative.
+   * @type {boolean}
+   */
+  this.associative = !!associative;
+
+  /**
+   * The maximum number of operands this operation can have.
+   * @type {number}
+   */
+  this.maxOperands = maxOperands || 2;
+};
+
+
 /**
  * The precedence of all of the operators in GLSL.  Operators with lower
  * values should be executed first and thus have a higher precedence.
  * @const
+ * @private
  */
-glslunit.Generator.OrderOfOperations = {
-  'function_call': 0, 'identifier': 0, 'float': 0, 'int': 0, 'bool': 0,
-  'postfix': 1,
-  'unary': 2,
-  '*': 3, '/': 3, '%': 3,
-  '+': 4, '-': 4,
-  '<<': 5, '>>': 5,
-  '<': 6, '>': 6, '<=': 6, '>=': 6,
-  '==': 7, '!=': 7,
-  '&': 8,
-  '^': 9,
-  '|': 10,
-  '&&': 11,
-  '||': 12,
-  'ternary': 13
+glslunit.Generator.ORDER_OF_OPERATIONS_ = {
+  'function_call': new glslunit.Generator.OperationEvaluation_(0,
+      glslunit.Generator.EvaluationOrder_.NA),
+  'identifier': new glslunit.Generator.OperationEvaluation_(0,
+      glslunit.Generator.EvaluationOrder_.NA),
+  'float': new glslunit.Generator.OperationEvaluation_(0,
+      glslunit.Generator.EvaluationOrder_.NA),
+  'int': new glslunit.Generator.OperationEvaluation_(0,
+      glslunit.Generator.EvaluationOrder_.NA),
+  'bool': new glslunit.Generator.OperationEvaluation_(0,
+      glslunit.Generator.EvaluationOrder_.NA),
+  'postfix': new glslunit.Generator.OperationEvaluation_(1,
+      glslunit.Generator.EvaluationOrder_.LTR, false, 1),
+  'unary': new glslunit.Generator.OperationEvaluation_(2,
+      glslunit.Generator.EvaluationOrder_.RTL, false, 1),
+  '*': new glslunit.Generator.OperationEvaluation_(3,
+      glslunit.Generator.EvaluationOrder_.LTR, true),
+  '/': new glslunit.Generator.OperationEvaluation_(3),
+  '%': new glslunit.Generator.OperationEvaluation_(3),
+  '+': new glslunit.Generator.OperationEvaluation_(4,
+      glslunit.Generator.EvaluationOrder_.LTR, true),
+  '-': new glslunit.Generator.OperationEvaluation_(4),
+  '<<': new glslunit.Generator.OperationEvaluation_(5),
+  '>>': new glslunit.Generator.OperationEvaluation_(5),
+  '<': new glslunit.Generator.OperationEvaluation_(6),
+  '>': new glslunit.Generator.OperationEvaluation_(6),
+  '<=': new glslunit.Generator.OperationEvaluation_(6),
+  '>=': new glslunit.Generator.OperationEvaluation_(6),
+  '==': new glslunit.Generator.OperationEvaluation_(7),
+  '!=': new glslunit.Generator.OperationEvaluation_(7),
+  '&': new glslunit.Generator.OperationEvaluation_(8,
+      glslunit.Generator.EvaluationOrder_.LTR, true),
+  '^': new glslunit.Generator.OperationEvaluation_(9,
+      glslunit.Generator.EvaluationOrder_.LTR, true),
+  '|': new glslunit.Generator.OperationEvaluation_(10,
+      glslunit.Generator.EvaluationOrder_.LTR, true),
+  '&&': new glslunit.Generator.OperationEvaluation_(11,
+      glslunit.Generator.EvaluationOrder_.LTR, true),
+  '^^': new glslunit.Generator.OperationEvaluation_(12,
+      glslunit.Generator.EvaluationOrder_.LTR, true),
+  '||': new glslunit.Generator.OperationEvaluation_(13,
+      glslunit.Generator.EvaluationOrder_.LTR, true),
+  'ternary': new glslunit.Generator.OperationEvaluation_(14,
+      glslunit.Generator.EvaluationOrder_.RTL, false, 3),
+  '=': new glslunit.Generator.OperationEvaluation_(15),
+  '-=': new glslunit.Generator.OperationEvaluation_(15),
+  '+=': new glslunit.Generator.OperationEvaluation_(15),
+  '*=': new glslunit.Generator.OperationEvaluation_(15),
+  '/=': new glslunit.Generator.OperationEvaluation_(15),
+  '%=': new glslunit.Generator.OperationEvaluation_(15),
+  '<<=': new glslunit.Generator.OperationEvaluation_(15),
+  '>>=': new glslunit.Generator.OperationEvaluation_(15),
+  '&=': new glslunit.Generator.OperationEvaluation_(15),
+  '^=': new glslunit.Generator.OperationEvaluation_(15),
+  '|=': new glslunit.Generator.OperationEvaluation_(15)
 };
 
 
 /**
  * @param {!Object} node The node of the AST having its source code generated.
- * @return {number} The precedence of node.
+ * @return {glslunit.Generator.OperationEvaluation_} The precedence of node.
+ * @private
  */
-glslunit.Generator.getNodePrecedence = function(node) {
+glslunit.Generator.getNodePrecedence_ = function(node) {
+  return glslunit.Generator.ORDER_OF_OPERATIONS_[
+    glslunit.Generator.getNodeOperator_(node)];
+};
+
+
+/**
+ * Returns a string representing the operator for a given node.
+ * @param {!Object} node The node of the AST having its source code generated.
+ * @return {string} The node's operator or type.
+ * @private
+ */
+glslunit.Generator.getNodeOperator_ = function(node) {
   if (node.type == 'binary') {
-    return glslunit.Generator.OrderOfOperations[node.operator.operator];
+    return node.operator.operator;
   } else {
-    return glslunit.Generator.OrderOfOperations[node.type];
+    return node.type;
   }
 };
 
@@ -162,7 +270,7 @@ glslunit.Generator.prototype.addNodesWithJoin_ = function(nodes, joinStr) {
  * Print a newline and indent the next line of we're in debug mode.
  * @private
  */
-glslunit.Generator.prototype.maybePrintNewline = function() {
+glslunit.Generator.prototype.maybePrintNewline_ = function() {
   if (this.debug_) {
     this.sourceCode_ +=
         this.newline_str_ + (new Array(this.currentIndent_ + 1)).
@@ -175,7 +283,7 @@ glslunit.Generator.prototype.maybePrintNewline = function() {
  * If we're in debug mode, chop off the last indent
  * @private
  */
-glslunit.Generator.prototype.maybeUnindent = function() {
+glslunit.Generator.prototype.maybeUnindent_ = function() {
   if (this.debug_ &&
       this.sourceCode_.slice(-1 * glslunit.Generator.INDENT_STR_.length) ==
         glslunit.Generator.INDENT_STR_) {
@@ -200,13 +308,13 @@ glslunit.Generator.prototype.visitStructDefinition = function(node) {
   this.currentIndent_++;
   this.addNodesWithJoin_(node.members, '');
   this.currentIndent_--;
-  this.maybeUnindent();
+  this.maybeUnindent_();
   this.sourceCode_ += '}';
   if (node.declarators) {
     this.addNodesWithJoin_(node.declarators, ',');
   }
   this.sourceCode_ += ';';
-  this.maybePrintNewline();
+  this.maybePrintNewline_();
 };
 
 
@@ -218,12 +326,12 @@ glslunit.Generator.prototype.visitStructDefinition = function(node) {
 glslunit.Generator.prototype.visitScope = function(node) {
   this.sourceCode_ += '{';
   this.currentIndent_++;
-  this.maybePrintNewline();
+  this.maybePrintNewline_();
   this.addNodesWithJoin_(node.statements, '');
   this.currentIndent_--;
-  this.maybeUnindent();
+  this.maybeUnindent_();
   this.sourceCode_ += '}';
-  this.maybePrintNewline();
+  this.maybePrintNewline_();
 };
 
 
@@ -235,7 +343,7 @@ glslunit.Generator.prototype.visitScope = function(node) {
 glslunit.Generator.prototype.visitPrecision = function(node) {
   this.sourceCode_ += 'precision ' + node.precision + ' ' +
                        node.typeName + ';';
-  this.maybePrintNewline();
+  this.maybePrintNewline_();
 };
 
 
@@ -248,7 +356,7 @@ glslunit.Generator.prototype.visitInvariant = function(node) {
  this.sourceCode_ += 'invariant ';
  this.addNodesWithJoin_(node.identifiers, ',');
  this.sourceCode_ += ';';
- this.maybePrintNewline();
+ this.maybePrintNewline_();
 };
 
 
@@ -290,7 +398,7 @@ glslunit.Generator.prototype.generateFunctionPrototype_ = function(node) {
 glslunit.Generator.prototype.visitFunctionPrototype = function(node) {
   this.generateFunctionPrototype_(node);
   this.sourceCode_ += ';';
-  this.maybePrintNewline();
+  this.maybePrintNewline_();
 };
 
 
@@ -436,7 +544,7 @@ glslunit.Generator.prototype.visitDeclarator = function(node) {
   this.sourceCode_ += ' ';
   this.addNodesWithJoin_(node.declarators, ',');
   this.sourceCode_ += ';';
-  this.maybePrintNewline();
+  this.maybePrintNewline_();
 };
 
 
@@ -460,7 +568,7 @@ glslunit.Generator.prototype.visitType = function(node) {
 glslunit.Generator.prototype.visitExpression = function(node) {
   this.visitNode(node.expression);
   this.sourceCode_ += ';';
-  this.maybePrintNewline();
+  this.maybePrintNewline_();
 };
 
 
@@ -476,7 +584,7 @@ glslunit.Generator.prototype.visitJump = function(node) {
     this.visitNode(node.value);
   }
   this.sourceCode_ += ';';
-  this.maybePrintNewline();
+  this.maybePrintNewline_();
 };
 
 
@@ -522,7 +630,6 @@ glslunit.Generator.prototype.visitContinue =
  * @export
  */
 glslunit.Generator.prototype.visitUnary = function(node) {
-  var nodePrecedence = glslunit.Generator.getNodePrecedence(node);
   // In cases like "10- -1, we need to add the space between the '10-' and the
   // '-1' to prevent confusion.  Otherwise, it gets interpreted as
   // (10--)1, which won't compile.
@@ -530,7 +637,7 @@ glslunit.Generator.prototype.visitUnary = function(node) {
     this.sourceCode_ += ' ';
   }
   this.visitNode(node.operator);
-  this.maybeParenthiseNode_(node.expression, nodePrecedence);
+  this.maybeParenthizeNode_(node.expression, node, 0);
 };
 
 
@@ -540,8 +647,7 @@ glslunit.Generator.prototype.visitUnary = function(node) {
  * @export
  */
 glslunit.Generator.prototype.visitPostfix = function(node) {
-  var nodePrecedence = glslunit.Generator.getNodePrecedence(node);
-  this.maybeParenthiseNode_(node.expression, nodePrecedence);
+  this.maybeParenthizeNode_(node.expression, node, 0);
   this.visitNode(node.operator);
 };
 
@@ -609,12 +715,37 @@ glslunit.Generator.formatFloat = function(value) {
   if (value == 0) {
     return '0.';
   }
-  var floatStr = ('' + value).toLowerCase().replace('+', '');
-  if (floatStr.indexOf('.') == -1 && floatStr.indexOf('e') == -1) {
+  // Strip off any +'s and any leading 0's
+  var floatStr = ('' + value).toLowerCase().
+      replace('+', '').
+      replace(/^0*/g, '');
+  if (floatStr.indexOf('e') != -1) {
+    return floatStr;
+  }
+  if (floatStr.indexOf('.') == -1) {
     floatStr += '.';
   }
-  // Strip leading and trailing 0's
-  return floatStr.replace(/^0*|0*$/g, '');
+  // Strip trailing 0's
+  floatStr = floatStr.replace(/0*$/g, '');
+  var absVal = Math.abs(value);
+  var digits = Math.floor(Math.log(absVal)/Math.LN10);
+  var expStr = (value < 0 ? '-' : '') +
+      absVal/Math.pow(10, digits) + 'e' + digits;
+  return floatStr.length <= expStr.length ? floatStr : expStr;
+};
+
+
+
+/**
+ * Formats a number as a GLSL int.
+ * @param {number} value The number to format as a GLSL int.
+ * @return {string} The float formatted as a GLSL int.
+ */
+glslunit.Generator.formatInt = function(value) {
+  var decStr = value.toString(10);
+  var hexStr = (value < 0 ? '-' : '') +
+      '0x' + Math.abs(value).toString(16).toLowerCase();
+  return decStr.length <= hexStr.length ? decStr : hexStr;
 };
 
 
@@ -643,7 +774,9 @@ glslunit.Generator.prototype.visitValue = function(node) {
  * @protected
  * @export
  */
-glslunit.Generator.prototype.visitInt = glslunit.Generator.prototype.visitValue;
+glslunit.Generator.prototype.visitInt = function(node) {
+  this.sourceCode_ += glslunit.Generator.formatInt(node.value);
+}
 
 
 /**
@@ -661,11 +794,11 @@ glslunit.Generator.prototype.visitBool =
  * @export
  */
 glslunit.Generator.prototype.visitBinary = function(node) {
-  var nodePrecedence = glslunit.Generator.getNodePrecedence(node);
-  this.maybeParenthiseNode_(node.left, nodePrecedence);
+  this.maybeParenthizeNode_(node.left, node, 0);
   this.visitNode(node.operator);
-  this.maybeParenthiseNode_(node.right, nodePrecedence);
+  this.maybeParenthizeNode_(node.right, node, 1);
 };
+
 
 /**
  * @param {!Object} node The node of the AST having its source code generated.
@@ -673,27 +806,64 @@ glslunit.Generator.prototype.visitBinary = function(node) {
  * @export
  */
 glslunit.Generator.prototype.visitTernary = function(node) {
-  var nodePrecedence = glslunit.Generator.getNodePrecedence(node);
-  this.maybeParenthiseNode_(node.condition, nodePrecedence);
+  this.maybeParenthizeNode_(node.condition, node, 0);
   this.sourceCode_ += '?';
-  this.maybeParenthiseNode_(node.is_true, nodePrecedence);
+  this.maybeParenthizeNode_(node.is_true, node, 1);
   this.sourceCode_ += ':';
-  this.maybeParenthiseNode_(node.is_false, nodePrecedence);
+  this.maybeParenthizeNode_(node.is_false, node, 2);
 };
+
 
 /**
  * @param {!Object} node The node of the AST having its source code generated.
- * @param {number} parentPrecedence The precedence of the parent node.
+ * @param {!Object} parentNode The parent of node.
+ * @param {number} operandIndex The index of node's operand.
  * @private
  */
-glslunit.Generator.prototype.maybeParenthiseNode_ = function(node,
-                                                            parentPrecedence) {
-  var nodePrecedence = glslunit.Generator.getNodePrecedence(node);
-  if (nodePrecedence > parentPrecedence) {
+glslunit.Generator.prototype.maybeParenthizeNode_ = function(node,
+                                                             parentNode,
+                                                             operandIndex) {
+  var nodePrecedence = glslunit.Generator.getNodePrecedence_(node);
+  var parentPrecedence = glslunit.Generator.getNodePrecedence_(parentNode);
+  var addParen = false;
+  if (nodePrecedence.precedence > parentPrecedence.precedence) {
+    addParen = true;
+  } else if (nodePrecedence.precedence == parentPrecedence.precedence) {
+    var nodeOperator = glslunit.Generator.getNodeOperator_(node);
+    var parentOperator = glslunit.Generator.getNodeOperator_(parentNode);
+    var nodeIsFirstOperation =
+        (parentPrecedence.evaluationOrder ==
+         glslunit.Generator.EvaluationOrder_.LTR &&
+           operandIndex == 0) ||
+        (parentPrecedence.evaluationOrder ==
+         glslunit.Generator.EvaluationOrder_.RTL &&
+           operandIndex == parentPrecedence.maxOperands - 1);
+    // If node would be evaluated first among the the children of parent to be
+    // executed anyway just due to the evaluation order, there is no need to
+    // parenthize node.  There is a bug here where
+    // a ? b ? c : d : e will wind up being parenthized
+    // a ? (b ? c : d) : e when it doesn't need to be, but that's so rare and it
+    // would overly complicate this already complicated code.
+    if (nodeIsFirstOperation) {
+      addParen = false;
+    } else if (nodeOperator == parentOperator && nodePrecedence.associative) {
+      // If the child node is the same operator as the parent node but won't be
+      // executed first, only skip the paren if their operator is associative.
+      // For example, a * (b * c) will generate a * b * c, because since
+      // multiplication is associative, the order in which the operations are
+      // executed doesn't matter.
+      addParen = false;
+    } else {
+      addParen = true;
+    }
+  } else {
+    addParen = false;
+  }
+  if (addParen) {
     this.sourceCode_ += '(';
   }
   this.visitNode(node);
-  if (nodePrecedence > parentPrecedence) {
+  if (addParen) {
     this.sourceCode_ += ')';
   }
 };

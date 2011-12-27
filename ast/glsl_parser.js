@@ -7219,14 +7219,14 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_multiplicative_expression();
+                result5 = parse_unary_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
                   result2 = null;
                   pos = pos2;
                 }
-              } else {
+              }   else {
                 result2 = null;
                 pos = pos2;
               }
@@ -7249,14 +7249,14 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_multiplicative_expression();
+                  result5 = parse_unary_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
                     result2 = null;
                     pos = pos2;
                   }
-                } else {
+                }   else {
                   result2 = null;
                   pos = pos2;
                 }
@@ -7465,7 +7465,7 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_additive_expression();
+                result5 = parse_multiplicative_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
@@ -7482,7 +7482,7 @@ glslunit.glsl.parser = (function(){
             }
           } else {
             result2 = null;
-            pos = pos2;
+              pos = pos2;
           }
           while (result2 !== null) {
             result1.push(result2);
@@ -7495,7 +7495,7 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_additive_expression();
+                  result5 = parse_multiplicative_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
@@ -7508,7 +7508,7 @@ glslunit.glsl.parser = (function(){
                 }
               } else {
                 result2 = null;
-                  pos = pos2;
+                pos = pos2;
               }
             } else {
               result2 = null;
@@ -7647,14 +7647,14 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_shift_expression();
+                result5 = parse_additive_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
                   result2 = null;
                   pos = pos2;
                 }
-              }   else {
+              } else {
                 result2 = null;
                 pos = pos2;
               }
@@ -7665,7 +7665,7 @@ glslunit.glsl.parser = (function(){
           } else {
             result2 = null;
             pos = pos2;
-            }
+          }
           while (result2 !== null) {
             result1.push(result2);
             pos2 = pos;
@@ -7677,14 +7677,14 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_shift_expression();
+                  result5 = parse_additive_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
                     result2 = null;
                     pos = pos2;
                   }
-                }   else {
+                } else {
                   result2 = null;
                   pos = pos2;
                 }
@@ -7901,14 +7901,14 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_relational_expression();
-                if (result5 !== null) {
+                result5 = parse_shift_expression();
+                      if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
                   result2 = null;
                   pos = pos2;
                 }
-              } else {
+              }   else {
                 result2 = null;
                 pos = pos2;
               }
@@ -7928,17 +7928,17 @@ glslunit.glsl.parser = (function(){
             if (result2 !== null) {
               result3 = parse_relational_operator();
               if (result3 !== null) {
-                  result4 = parse__();
+                result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_relational_expression();
+                  result5 = parse_shift_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
                     result2 = null;
                     pos = pos2;
                   }
-                } else {
+                }   else {
                   result2 = null;
                   pos = pos2;
                 }
@@ -8053,7 +8053,7 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_equality_expression();
+                result5 = parse_relational_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
@@ -8064,7 +8064,7 @@ glslunit.glsl.parser = (function(){
                 result2 = null;
                 pos = pos2;
               }
-            } else {
+                  } else {
               result2 = null;
               pos = pos2;
             }
@@ -8083,7 +8083,7 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_equality_expression();
+                  result5 = parse_relational_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
@@ -8096,7 +8096,7 @@ glslunit.glsl.parser = (function(){
                 }
               } else {
                 result2 = null;
-                  pos = pos2;
+                pos = pos2;
               }
             } else {
               result2 = null;
@@ -8235,7 +8235,7 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_bitwise_and_expression();
+                result5 = parse_equality_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
@@ -8245,7 +8245,7 @@ glslunit.glsl.parser = (function(){
               } else {
                 result2 = null;
                 pos = pos2;
-                    }
+              }
             } else {
               result2 = null;
               pos = pos2;
@@ -8259,13 +8259,13 @@ glslunit.glsl.parser = (function(){
             pos2 = pos;
             result2 = parse__();
             result2 = result2 !== null ? result2 : "";
-            if (result2 !== null) {
+              if (result2 !== null) {
               result3 = parse_bitwise_and_operator();
               if (result3 !== null) {
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_bitwise_and_expression();
+                  result5 = parse_equality_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
@@ -8417,7 +8417,7 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_bitwise_xor_expression();
+                result5 = parse_bitwise_and_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
@@ -8447,7 +8447,7 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_bitwise_xor_expression();
+                  result5 = parse_bitwise_and_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
@@ -8599,7 +8599,7 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_bitwise_or_expression();
+                result5 = parse_bitwise_xor_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
@@ -8629,7 +8629,7 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_bitwise_or_expression();
+                  result5 = parse_bitwise_xor_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
@@ -8740,7 +8740,7 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_logical_and_expression();
+                result5 = parse_bitwise_or_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
@@ -8750,7 +8750,7 @@ glslunit.glsl.parser = (function(){
               } else {
                 result2 = null;
                 pos = pos2;
-                    }
+              }
             } else {
               result2 = null;
               pos = pos2;
@@ -8770,7 +8770,7 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_logical_and_expression();
+                  result5 = parse_bitwise_or_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
@@ -8802,7 +8802,7 @@ glslunit.glsl.parser = (function(){
         }
         if (result0 !== null) {
           result0 = (function(head, tail) {
-                return daisy_chain(head, tail);
+              return daisy_chain(head, tail);
             })(result0[0], result0[1]);
         }
         if (result0 === null) {
@@ -8881,7 +8881,7 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_logical_xor_expression();
+                result5 = parse_logical_and_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
@@ -8911,7 +8911,7 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_logical_xor_expression();
+                  result5 = parse_logical_and_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {
@@ -9022,7 +9022,7 @@ glslunit.glsl.parser = (function(){
               result4 = parse__();
               result4 = result4 !== null ? result4 : "";
               if (result4 !== null) {
-                result5 = parse_logical_or_expression();
+                result5 = parse_logical_xor_expression();
                 if (result5 !== null) {
                   result2 = [result2, result3, result4, result5];
                 } else {
@@ -9052,7 +9052,7 @@ glslunit.glsl.parser = (function(){
                 result4 = parse__();
                 result4 = result4 !== null ? result4 : "";
                 if (result4 !== null) {
-                  result5 = parse_logical_or_expression();
+                  result5 = parse_logical_xor_expression();
                   if (result5 !== null) {
                     result2 = [result2, result3, result4, result5];
                   } else {

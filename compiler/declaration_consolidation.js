@@ -9,6 +9,7 @@ goog.provide('glslunit.compiler.DeclarationConsolidation');
 
 goog.require('glslunit.ASTTransformer');
 goog.require('glslunit.Generator');
+goog.require('glslunit.NodeCollector');
 goog.require('glslunit.VariableScopeVisitor');
 goog.require('glslunit.compiler.CompilerStep');
 goog.require('glslunit.compiler.ShaderProgram');
@@ -18,11 +19,13 @@ goog.require('goog.array');
 
 /**
  * Optimizer consolidates declarations of variables into the same line.
+ * @param {boolean} consolidateAttributes Whether or not to consolidate
+ *     attributes.
  * @constructor
  * @extends {glslunit.ASTTransformer}
  * @implements {glslunit.compiler.CompilerStep}
  */
-glslunit.compiler.DeclarationConsolidation = function() {
+glslunit.compiler.DeclarationConsolidation = function(consolidateAttributes) {
   goog.base(this);
 
   /**
@@ -48,6 +51,22 @@ glslunit.compiler.DeclarationConsolidation = function() {
    * @private
    */
   this.typeMapStack_ = [];
+
+  /**
+   * Set of node IDs that are initializers of for loops.
+   * This is needed because GLSL doesn't allow initializers of for loops to be
+   * declared outside of the for loop.
+   * @type {Array.<boolean>}
+   * @private
+   */
+  this.forInitializerNodes_ = [];
+
+  /**
+   * Whether or not to consolidate attribute values.
+   * @type {boolean}
+   * @private
+   */
+  this.consolidateAttributes_ = consolidateAttributes;
 };
 goog.inherits(glslunit.compiler.DeclarationConsolidation,
               glslunit.ASTTransformer);
@@ -62,7 +81,15 @@ goog.inherits(glslunit.compiler.DeclarationConsolidation,
  */
 glslunit.compiler.DeclarationConsolidation.prototype.beforeTransformRoot =
       function(node) {
-  // First, gather all declarations and organize them by scope and type.
+  // First, find all of the for loops and keep track of their initalizer nodes.
+  var forNodes = glslunit.NodeCollector.collectNodes(node, function(x) {
+    return x.type == 'for_statement';
+  });
+  goog.array.forEach(forNodes, function(forNode) {
+    this.forInitializerNodes_[forNode.initializer.id] = true;
+  }, this);
+
+  // Second, gather all declarations and organize them by scope and type.
   var scopeDeclarations =
       glslunit.VariableScopeVisitor.getScopeToDeclarationMap(node);
 
@@ -74,7 +101,8 @@ glslunit.compiler.DeclarationConsolidation.prototype.beforeTransformRoot =
     var variablesInScope = scopeDeclarations[/** @type {number} */(scope)];
     goog.array.forEach(variablesInScope, function(variable) {
       // We are only interested in declarators, not parameters.
-      if (variable.type == 'declarator') {
+      if (variable.type == 'declarator' &&
+          this.shouldConsolidateDeclarator(variable, scope == node.id)) {
         var typeStr = glslunit.Generator.getSourceCode(variable.typeAttribute);
         // If the map of types to variable declarations in this scope doesn't
         // have an entry yet, create one.
@@ -97,7 +125,6 @@ glslunit.compiler.DeclarationConsolidation.prototype.beforeTransformRoot =
     }, this);
     this.scopeIdToDeclarators_[/** @type {number} */(scope)] = typeToVars;
   }
-
   this.beforeTransformScope(node);
 };
 
@@ -172,16 +199,31 @@ glslunit.compiler.DeclarationConsolidation.prototype.
  * Determins whether or not a given declarator should have it's declarations
  * consolidated.
  * @param {!Object} declarator The declarator to check for consolidation.
+ * @param {bolean} isGlobal Whether or not this variable is a global variable.
  * @return {boolean} Whether or not declarator should be consolidated.
  */
 glslunit.compiler.DeclarationConsolidation.prototype.
-    shouldConsolidateDeclarator = function(declarator) {
+    shouldConsolidateDeclarator = function(declarator, isGlobal) {
   var typeStr = glslunit.Generator.getSourceCode(declarator.typeAttribute);
-  var declarator_items = this.typeMapStack_.slice(-1)[0][typeStr];
+  var declarator_items = null;
+  if (this.typeMapStack_.length > 0) {
+    declarator_items = this.typeMapStack_.slice(-1)[0][typeStr];
+  }
   return (declarator != null &&
-          declarator.typeAttribute.qualifier != 'attribute' &&
+          (this.consolidateAttributes_ ||
+              declarator.typeAttribute.qualifier != 'attribute') &&
           declarator.typeAttribute.qualifier != 'const' &&
-          (!declarator_items || declarator_items.length > 1));
+          (!declarator_items || declarator_items.length > 1) &&
+          !(declarator.id in this.forInitializerNodes_) &&
+          // If this is a global scope declaration, we can't consolidate the
+          // declarator items if they have initializers since we wouldn't be
+          // able to move the initialization to a new line.  Once we do some
+          // fancy SSA work we could possibly consolidate them IF they don't
+          // depend on any other state, but not yet.
+          !(isGlobal &&
+            !goog.array.every(declarator.declarators, function(x) {
+              return !goog.isDef(x.initializer);
+            })));
 };
 
 
@@ -196,7 +238,8 @@ glslunit.compiler.DeclarationConsolidation.prototype.
 glslunit.compiler.DeclarationConsolidation.prototype.transformDeclaratorItem =
     function(node) {
   // Leave attributes in place
-  if (!this.shouldConsolidateDeclarator(this.currentDeclarator_)) {
+  if (!this.shouldConsolidateDeclarator(this.currentDeclarator_,
+                                        this.typeMapStack_.length == 1)) {
     return node;
   }
   if (node.initializer) {
@@ -240,7 +283,7 @@ glslunit.compiler.DeclarationConsolidation.prototype.transformDeclaratorItem =
 glslunit.compiler.DeclarationConsolidation.prototype.transformDeclarator =
     function(node) {
   // Leave attributes in place
-  if (!this.shouldConsolidateDeclarator(node)) {
+  if (!this.shouldConsolidateDeclarator(node, this.typeMapStack_.length == 1)) {
     return node;
   }
   var result = [];
@@ -265,9 +308,16 @@ glslunit.compiler.DeclarationConsolidation.prototype.transformDeclarator =
 };
 
 
+/**
+ * The name of this compilation step.
+ * @type {string}
+ */
+glslunit.compiler.DeclarationConsolidation.NAME = 'DeclarationConsolidation';
+
+
 /** @override */
 glslunit.compiler.DeclarationConsolidation.prototype.getName = function() {
-  return 'Declaration Cosolidation';
+  return glslunit.compiler.DeclarationConsolidation.NAME;
 };
 
 
@@ -281,8 +331,10 @@ glslunit.compiler.DeclarationConsolidation.prototype.getDependencies =
 /** @override */
 glslunit.compiler.DeclarationConsolidation.prototype.performStep =
     function(stepOutputMap, shaderProgram) {
-  var vertexTransformer = new glslunit.compiler.DeclarationConsolidation();
-  var fragmentTransformer = new glslunit.compiler.DeclarationConsolidation();
+  var vertexTransformer = new glslunit.compiler.DeclarationConsolidation(
+      this.consolidateAttributes_);
+  var fragmentTransformer = new glslunit.compiler.DeclarationConsolidation(
+      this.consolidateAttributes_);
   shaderProgram.vertexAst =
       vertexTransformer.transformNode(shaderProgram.vertexAst);
   shaderProgram.fragmentAst =

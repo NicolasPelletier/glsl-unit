@@ -37,10 +37,6 @@ fakeStepGenerator = function(name, dependencies) {
   }
 };
 
-fakeStepGenerator.prototype.addDependency = function(dependency) {
-  this.dependencies.push(dependency);
-};
-
 function testNoSteps() {
   var shaderProgram = {};
   var compiler = new glslunit.compiler.Compiler(shaderProgram);
@@ -52,14 +48,14 @@ function testCompilation() {
   var shaderProgram = {};
   var compiler = new glslunit.compiler.Compiler(shaderProgram);
   var opStep = new fakeStepGenerator('opStep1', []);
-  var secondOpStep = new fakeStepGenerator('opStep2', [opStep.step]);
+  var secondOpStep = new fakeStepGenerator('opStep2', ['opStep1']);
   var minStep = new fakeStepGenerator('minStep', []);
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.OPTIMIZATION,
-                        secondOpStep.step);
+                        new secondOpStep.step());
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.OPTIMIZATION,
-                        opStep.step);
+                        new opStep.step());
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.OPTIMIZATION,
-                        minStep.step);
+                        new minStep.step());
   assertEquals(shaderProgram, compiler.compileProgram());
   assertEquals(0, opStep.executionOrder);
   assertEquals(1, opStep.executionCount);
@@ -72,16 +68,15 @@ function testCompilation() {
 function testLoop() {
   var shaderProgram = {};
   var compiler = new glslunit.compiler.Compiler(shaderProgram);
-  var opStep = new fakeStepGenerator('opStep1', []);
-  var secondOpStep = new fakeStepGenerator('opStep2', [opStep.step]);
-  var minStep = new fakeStepGenerator('minStep', [secondOpStep.step]);
-  opStep.addDependency(minStep.step);
+  var opStep = new fakeStepGenerator('opStep1', ['minStep']);
+  var secondOpStep = new fakeStepGenerator('opStep2', ['opStep1']);
+  var minStep = new fakeStepGenerator('minStep', ['opStep2']);
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.OPTIMIZATION,
-                        secondOpStep.step);
+                        new secondOpStep.step());
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.OPTIMIZATION,
-                        opStep.step);
+                        new opStep.step());
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.OPTIMIZATION,
-                        minStep.step);
+                        new minStep.step());
   var errorMessage = 'Circular dependcy in compiler steps.  ' +
       'opStep2->opStep1->minStep->opStep2';
   assertThrows(errorMessage, function() {compiler.compileProgram();});

@@ -35,16 +35,29 @@ glslunit.CallGraphVisitor = function() {
    * @type {Object.<string, Array.<string>>}
    * @private
    */
-  this.callGraph_ = {'root': []};
+  this.callGraph_ = {};
+
+  // We initialize the entry for the root node to an empty array.  We need an
+  // entry for the root node for functions that are called within the global
+  // scope, e.g. initalizing a global variable to a vector.
+  this.callGraph_[glslunit.CallGraphVisitor.ROOT_NAME] = [];
 
   /**
    * The name of the function currently being visited.
    * @type {?string}
    * @private
    */
-  this.currentFunctionName_ = 'root';
+  this.currentFunctionName_ = glslunit.CallGraphVisitor.ROOT_NAME;
 };
 goog.inherits(glslunit.CallGraphVisitor, glslunit.ASTVisitor);
+
+
+/**
+ * The name assigned to the root node of the call tree.  We use a symbol that
+ * would be an invalid function name to avoid collisions.
+ * @type {string}
+ */
+glslunit.CallGraphVisitor.ROOT_NAME = '#';
 
 
 /**
@@ -71,7 +84,7 @@ glslunit.CallGraphVisitor.prototype.beforeVisitFunctionDeclaration =
  */
 glslunit.CallGraphVisitor.prototype.afterVisitFunctionDeclaration =
     function(node) {
-  this.currentFunctionName_ = 'root';
+  this.currentFunctionName_ = glslunit.CallGraphVisitor.ROOT_NAME;
 };
 
 
@@ -82,10 +95,8 @@ glslunit.CallGraphVisitor.prototype.afterVisitFunctionDeclaration =
  * @export
  */
 glslunit.CallGraphVisitor.prototype.visitFunctionCall = function(node) {
-  if (this.currentFunctionName_ in this.callGraph_) {
-    this.callGraph_[this.currentFunctionName_].push(node.function_name);
-    this.genericVisitor(node);
-  }
+  this.callGraph_[this.currentFunctionName_].push(node.function_name);
+  this.genericVisitor(node);
 };
 
 
