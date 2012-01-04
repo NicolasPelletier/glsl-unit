@@ -9,6 +9,7 @@ a {
 #compile-container {
   float: left;
   clear: left;
+  padding-top: 20px;
 }
 
 #source-editor-container {
