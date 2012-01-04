@@ -22,9 +22,9 @@ goog.require('goog.object');
 var path = require('path');
 var fs = require('fs');
 
-goog.node.FLAGS.define_string('vertex_source', '',
+goog.node.FLAGS.define_string('vertex_source', undefined,
                               'The input vertex GLSL file.');
-goog.node.FLAGS.define_string('fragment_source', '',
+goog.node.FLAGS.define_string('fragment_source', undefined,
                               'The input fragment GLSL file.');
 goog.node.FLAGS.define_string('vertex_output', '',
                               'The file to write the minified vertex GLSL to.');
@@ -73,7 +73,7 @@ function main() {
                  glslunit.Generator.getSourceCode(shaderProgram.fragmentAst));
   } else {
     var resultString =
-       '\n//! VERTEX\n' +
+       '//! VERTEX\n' +
         glslunit.Generator.getSourceCode(shaderProgram.vertexAst,
                                          '\\n') +
         '\n//! FRAGMENT\n' +

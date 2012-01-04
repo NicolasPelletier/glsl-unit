@@ -25,6 +25,9 @@
 	</script>
 </head>
 <body ng:controller="GLSLUnitExampleController">
+  <h1>
+    <a href='http://code.google.com/p/glsl-unit'>GLSL Unit</a> - Unit testing for GLSL
+  </h1>
   <div id="header-container">
     <select id='example_select' name="selectedExample" ng:options="ex.name for ex in examples"></select>
     <button ng:click="loadSelectedExample()">Load Example</button>
