@@ -2,6 +2,16 @@
   float: left;
 }
 
+a {
+  text-decoration: none;
+}
+
+#compile-container {
+  float: left;
+  clear: left;
+  padding-top: 20px;
+}
+
 #source-editor-container {
   clear: left;
   float: left;
@@ -70,11 +80,11 @@
 }
 
 .failed {
-  color:red;  
+  color:red;
 }
 
 .passed {
-  color:green;  
+  color:green;
 }
 
 .test-case.passed {
@@ -82,7 +92,7 @@
 }
 
 #results-container {
-	font-family: Courier New, monospace;
+  font-family: Courier New, monospace;
   font-size: small;
 }
 

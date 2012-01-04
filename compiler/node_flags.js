@@ -22,36 +22,49 @@ goog.provide('goog.node.FLAGS');
 goog.provide('goog.node.commandLineFlag');
 
 
+/**
+ * The type of command line flag.
+ * @enum {string}
+ */
+goog.node.flagType = {
+  STRING: 'string',
+  BOOLEAN: 'boolean'
+}
+
 
 /**
  * Object for storing an instance of a command line flag.
  * @param {string} name The name of this flag.
+ * @param {goog.node.flagType} type The type of this flag.
  * @param {*} defaultValue The default value to return if the flag has not
  *     yet been set.
  * @param {string} description The description of this flag.
  * @constructor
  */
-goog.node.commandLineFlag = function(name, defaultValue, description) {
+goog.node.commandLineFlag = function(name, type, defaultValue, description) {
   /**
    * The name of this flag.
    * @type {string}
-   * @private
    */
-  this.name_ = name;
+  this.name = name;
+
+  /**
+   * The type of this flag.
+   * @type {goog.node.flagType}
+   */
+  this.type = type;
 
   /**
    * The default value of this flag.
    * @type {*}
-   * @private
    */
-  this.defaultValue_ = defaultValue;
+  this.defaultValue = defaultValue;
 
   /**
    * The description of this flag.
    * @type {string}
-   * @private
    */
-  this.description_ = description;
+  this.description = description;
 
   /**
    * The value set from the command line of this flag.
@@ -65,11 +78,20 @@ goog.node.commandLineFlag = function(name, defaultValue, description) {
  * Returns the current value for a command line flag.
  * @return {*} The value of the flag.
  */
+goog.node.commandLineFlag.prototype.isRequired = function() {
+  return !goog.isDef(this.defaultValue);
+};
+
+
+/**
+ * Returns the current value for a command line flag.
+ * @return {*} The value of the flag.
+ */
 goog.node.commandLineFlag.prototype.getValue = function() {
   if (goog.isDef(this.value)) {
     return this.value;
   }
-  return this.defaultValue_;
+  return this.defaultValue;
 };
 
 
@@ -97,7 +119,8 @@ goog.node.FLAGS.definedFlags_ = {};
  * @param {string} description The description of this flag.
  */
 goog.node.FLAGS.define_string = function(name, defaultValue, description) {
-  var newFlag = new goog.node.commandLineFlag(name, defaultValue, description);
+  var newFlag = new goog.node.commandLineFlag(name, goog.node.flagType.STRING,
+                                              defaultValue, description);
   goog.node.FLAGS.definedFlags_[name] = newFlag;
   goog.node.FLAGS.__defineGetter__(name, function() {
     return String(newFlag.getValue());
@@ -112,7 +135,8 @@ goog.node.FLAGS.define_string = function(name, defaultValue, description) {
  * @param {boolean} description The description of this flag.
  */
 goog.node.FLAGS.define_bool = function(name, defaultValue, description) {
-  var newFlag = new goog.node.commandLineFlag(name, defaultValue, description);
+  var newFlag = new goog.node.commandLineFlag(name, goog.node.flagType.BOOLEAN,
+                                              defaultValue, description);
   goog.node.FLAGS.definedFlags_[name] = newFlag;
   goog.node.FLAGS.__defineGetter__(name, function() {
     return Boolean(newFlag.getValue());
@@ -127,7 +151,15 @@ goog.node.FLAGS.define_bool = function(name, defaultValue, description) {
  */
 goog.node.FLAGS.parseArgs = function() {
   var lastParam = null;
-  process.argv.forEach(function(value, index) {
+  process.argv.forEach(function(value, index, array) {
+    // First two arguments are 'node' and the module name.
+    if (index <=1 ) {
+      return;
+    }
+    if (value == '--help') {
+        goog.node.FLAGS.printHelp();
+        process.exit(0);
+    }
     var splitParam = value.split('=', 2);
     var flag, flagValue;
     if (splitParam.length > 1) {
@@ -145,7 +177,34 @@ goog.node.FLAGS.parseArgs = function() {
       flag = flag.slice(2);
       if (flag in goog.node.FLAGS.definedFlags_) {
         goog.node.FLAGS.definedFlags_[flag].value = flagValue;
+      } else {
+        console.error('Unknown flag ' + flag);
+        goog.node.FLAGS.printHelp();
+        process.exit(1);
       }
     }
   });
+  for (var flagName in goog.node.FLAGS.definedFlags_) {
+    var flag = goog.node.FLAGS.definedFlags_[flagName];
+    if (flag.isRequired() && !goog.isDef(flag.value)) {
+      console.error('Flag ' + flagName + ' is required but not provided.\n');
+        goog.node.FLAGS.printHelp();
+        process.exit(1);
+    }
+  }
 };
+
+
+goog.node.FLAGS.printHelp = function() {
+  var helpString = 'Flags:\n';
+  for (var flagName in goog.node.FLAGS.definedFlags_) {
+    var flag = goog.node.FLAGS.definedFlags_[flagName];
+    helpString += '  --' + flag.name + ': ' + flag.description;
+    if (!flag.isRequired()) {
+      helpString += '\n    (default: \'' + flag.defaultValue + '\')\n';
+    } else {
+      helpString += '\n    (required)\n';
+    }
+  }
+  process.stdout.write(helpString);
+}

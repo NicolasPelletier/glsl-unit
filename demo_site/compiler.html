@@ -25,9 +25,10 @@
 	</script>
 </head>
 <body ng:controller="GLSLCompilerController">
-  <div id="header-container">
-    <button ng:click="compile()">Compile</button>
-  </div>
+  <h1>
+    <a href='http://code.google.com/p/glsl-unit/wiki/UsingTheCompiler'>GLSL Compiler</a> - Minifier
+    for GLSL.
+  </h1>
   <div id="source-editor-container">
     <div id="vertex-container" class='glsl-input'>
       <strong>Vertex Source</strong>
@@ -37,7 +38,10 @@
       <strong>Fragment Source</strong>
       <ace:editor id="fragment-source" mode="c_cpp" bindExp="fragmentSource" theme="eclipse"></ace:editor>
     </div>
-    <div id="status">
+    <div id="compile-container">
+      <button ng:click="compile()">Compile</button>
+    </div>
+    <div id="status" ng:show="compiledVertexSource">
       <ul>
         <li>Original Length: {{originalLength}}
         <li>New Length: {{newLength}}
@@ -45,7 +49,7 @@
         Original Size)
       </ul>
     </div>
-    <div id="compiled-container">
+    <div id="compiled-container" ng:show="compiledVertexSource">
       <textarea id="compiled-vertex" class="compiled-source"
         name="compiledVertexSource"></textarea>
       <textarea id="compiled-fragment" class="compiled-source"

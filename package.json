@@ -1,0 +1,17 @@
+{
+  "name": "glsl-unit",
+  "version": "0.0.1",
+  "description": "Unit testing framework for GLSL and minifying compiler",
+  "homepage": "http://glslunit.appspot.com",
+  "author": {
+    "name": "Roy Williams",
+    "email": "rowillia@google.com"
+  },
+  "bin": {
+    "glsl-compiler": "bin/basic_glsl_compiler.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://code.google.com/p/glsl-unit/"
+  }
+}
