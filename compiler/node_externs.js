@@ -21,6 +21,21 @@ function process() {}
 process.argv;
 
 /**
+ * @param {number} arg
+ */
+process.exit = function(arg) {};
+
+/**
+ * @return {Object}
+ */
+process.stdout = function() {};
+
+/**
+ * @param {string} arg
+ */
+process.stdout.write = function(arg) {};
+
+/**
  * @return {Object}
  */
 function console() {}
@@ -29,6 +44,11 @@ function console() {}
  * @param {string} arg
  */
 console.log = function(arg) {};
+
+/**
+ * @param {string} arg
+ */
+console.error = function(arg) {};
 
 /**
  * @constructor

@@ -33,7 +33,7 @@ glslunit.compiler.CompilerStep.prototype.getDependencies = function() {};
 
 /**
  * Performs this compilation step.
- * @param {Object.<String, !Object>} stepOutputMap Map of compilation step names
+ * @param {Object.<string, !Object>} stepOutputMap Map of compilation step names
  *      to their output data.
  * @param {glslunit.compiler.ShaderProgram} shaderProgram The program to be
  *     compiled.  This shaderProgram will be transformed in place.

@@ -102,7 +102,7 @@ glslunit.compiler.DeclarationConsolidation.prototype.beforeTransformRoot =
     goog.array.forEach(variablesInScope, function(variable) {
       // We are only interested in declarators, not parameters.
       if (variable.type == 'declarator' &&
-          this.shouldConsolidateDeclarator(variable, scope == node.id)) {
+          this.shouldConsolidateDeclarator_(variable, scope == node.id)) {
         var typeStr = glslunit.Generator.getSourceCode(variable.typeAttribute);
         // If the map of types to variable declarations in this scope doesn't
         // have an entry yet, create one.
@@ -196,14 +196,15 @@ glslunit.compiler.DeclarationConsolidation.prototype.
 
 
 /**
- * Determins whether or not a given declarator should have it's declarations
+ * Determines whether or not a given declarator should have it's declarations
  * consolidated.
  * @param {!Object} declarator The declarator to check for consolidation.
- * @param {bolean} isGlobal Whether or not this variable is a global variable.
+ * @param {boolean} isGlobal Whether or not this variable is a global variable.
  * @return {boolean} Whether or not declarator should be consolidated.
+ * @private
  */
 glslunit.compiler.DeclarationConsolidation.prototype.
-    shouldConsolidateDeclarator = function(declarator, isGlobal) {
+    shouldConsolidateDeclarator_ = function(declarator, isGlobal) {
   var typeStr = glslunit.Generator.getSourceCode(declarator.typeAttribute);
   var declarator_items = null;
   if (this.typeMapStack_.length > 0) {
@@ -238,8 +239,9 @@ glslunit.compiler.DeclarationConsolidation.prototype.
 glslunit.compiler.DeclarationConsolidation.prototype.transformDeclaratorItem =
     function(node) {
   // Leave attributes in place
-  if (!this.shouldConsolidateDeclarator(this.currentDeclarator_,
-                                        this.typeMapStack_.length == 1)) {
+  if (!this.shouldConsolidateDeclarator_(
+      /** @type ! {Object} */ (this.currentDeclarator_),
+      this.typeMapStack_.length == 1)) {
     return node;
   }
   if (node.initializer) {
@@ -283,7 +285,8 @@ glslunit.compiler.DeclarationConsolidation.prototype.transformDeclaratorItem =
 glslunit.compiler.DeclarationConsolidation.prototype.transformDeclarator =
     function(node) {
   // Leave attributes in place
-  if (!this.shouldConsolidateDeclarator(node, this.typeMapStack_.length == 1)) {
+  if (!this.shouldConsolidateDeclarator_(node,
+      this.typeMapStack_.length == 1)) {
     return node;
   }
   var result = [];
@@ -311,6 +314,7 @@ glslunit.compiler.DeclarationConsolidation.prototype.transformDeclarator =
 /**
  * The name of this compilation step.
  * @type {string}
+ * @const
  */
 glslunit.compiler.DeclarationConsolidation.NAME = 'DeclarationConsolidation';
 

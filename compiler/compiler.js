@@ -128,7 +128,9 @@ glslunit.compiler.Compiler.prototype.runStep_ =
   // run.
   if (!(stepName in this.stepOutputs_)) {
     goog.array.forEach(step.getDependencies(), function(dependency) {
-      this.runStep_(this.registeredSteps_[dependency], nextStepStack);
+      if (dependency in this.registeredSteps_) {
+        this.runStep_(this.registeredSteps_[dependency], nextStepStack);
+      }
     }, this);
     this.stepOutputs_[stepName] = step.performStep(this.stepOutputs_,
                                                    this.shaderProgram_);

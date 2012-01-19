@@ -7,8 +7,29 @@
  */
 
 goog.provide('glslunit.compiler.ShaderAttributeEntry');
+goog.provide('glslunit.compiler.ShaderMode');
 goog.provide('glslunit.compiler.ShaderProgram');
 goog.provide('glslunit.compiler.ShaderUniformEntry');
+
+goog.require('glslunit.Generator');
+
+/**
+ * Structure for shader modes.
+ * @constructor
+ */
+glslunit.compiler.ShaderMode = function() {
+  /**
+   * The preprocessor name for this mode
+   * @type {string}
+   */
+  this.preprocessorName = '';
+
+  /**
+   * The list of options for this mode.
+   * @type {Array.<!{name: string, value: number}>}
+   */
+  this.options = [];
+};
 
 
 
@@ -34,6 +55,18 @@ glslunit.compiler.ShaderAttributeEntry = function() {
    * @type {number}
    */
   this.variableSize = 0;
+
+  /**
+   * The offset of this attribute declaration in the compiled source code.
+   * @type {number}
+   */
+  this.sourceOffset = 0;
+
+  /**
+   * The size of the declaration of the attribute in the compiled source code.
+   * @type {number}
+   */
+  this.sourceSize = 0;
 };
 
 
@@ -68,6 +101,24 @@ glslunit.compiler.ShaderUniformEntry = function() {
  */
 glslunit.compiler.ShaderProgram = function() {
   /**
+   * The name of the Javascript class to be be generated.
+   * @type {string}
+   */
+  this.className = '';
+
+  /**
+   * The name of the superclass of the Javascript class to be be generated.
+   * @type {string}
+   */
+  this.superClass = '';
+
+  /**
+   * The namespace of the generated class.
+   * @type {string}
+   */
+  this.namespace = '';
+
+  /**
    * The source code for the fragment shader for this program.
    * @type {!Object}
    */
@@ -78,6 +129,19 @@ glslunit.compiler.ShaderProgram = function() {
    * @type {!Object}
    */
   this.vertexAst = {};
+
+  /**
+   * When accessing fragmentSource/vertexSource, if prettyPrint is true
+   * the source will be pretty printed.
+   * @type {boolean}
+   */
+  this.prettyPrint = false;
+
+  /**
+   * Map of the original name of a definition to it's name in the compiled code.
+   * @type {Object.<string, string>}
+   */
+  this.defineMap = null;
 
   /**
    * Map of the original name of a definition to the ShaderAttributeEntry with
@@ -91,4 +155,129 @@ glslunit.compiler.ShaderProgram = function() {
    * @type {Object.<string, glslunit.compiler.ShaderUniformEntry>}
    */
   this.uniformMap = {};
+
+  /**
+   * Array of shader modes.
+   * @type {Array.<!glslunit.compiler.ShaderMode>}
+   */
+  this.shaderModes = [];
+
+  /**
+   * Array of required javascript classes.
+   * @type {!Array.<string>}
+   */
+  this.jsRequires = [];
+
+  /**
+   * Array of required javascript classes.
+   * @type {!Array.<{value: string, expression: string}>}
+   */
+  this.jsConsts = [];
+};
+
+
+/**
+ * Gets the vertex source code.
+ * @param {string=} opt_newline The string to use for line breaks.
+ * @return {string} The vertex source code.
+ * @export
+ */
+glslunit.compiler.ShaderProgram.prototype.getVertexSource =
+    function(opt_newline) {
+  return glslunit.Generator.getSourceCode(this.vertexAst, opt_newline || '\\n',
+      this.prettyPrint);
+};
+
+
+/**
+ * Gets the fragment source code.
+ * @param {string=} opt_newline The string to use for line breaks.
+ * @return {string} The vertex source code.
+ * @export
+ */
+glslunit.compiler.ShaderProgram.prototype.getFragmentSource = function(
+    opt_newline) {
+  return glslunit.Generator.getSourceCode(this.fragmentAst,
+      opt_newline || '\\n', this.prettyPrint);
+};
+
+
+/**
+ * Gets the list of attributes for this shader program.
+ * @return {Array.<glslunit.compiler.ShaderAttributeEntry>} The list of
+ *     attributes for this shader program.
+ * @export
+ */
+glslunit.compiler.ShaderProgram.prototype.getAttributes = function() {
+  var result = [];
+  for (var i in this.attributeMap) {
+    result.push(this.attributeMap[i]);
+  }
+  return result;
+};
+
+
+/**
+ * Gets the list of uniforms for this shader program.
+ * @return {Array.<glslunit.compiler.ShaderUniformEntry>} The list of uniforms
+ *     for this shader program.
+ * @export
+ */
+glslunit.compiler.ShaderProgram.prototype.getUniforms = function() {
+  var result = [];
+  for (var i in this.uniformMap) {
+    result.push(this.uniformMap[i]);
+  }
+  return result;
+};
+
+
+/**
+ * Fills in any uniform or attribute entries in this shader program that haven't
+ * already been filled in.
+ */
+glslunit.compiler.ShaderProgram.prototype.defaultUniformsAndAttributes =
+    function() {
+  var attributeShortNameToEntry = {};
+  for (var attributeName in this.attributeMap) {
+    var attribute = this.attributeMap[attributeName];
+    attributeShortNameToEntry[attribute.shortName] = attribute;
+  }
+  var uniformShortNameToEntry = {};
+  for (var uniformName in this.uniformMap) {
+    var uniform = this.uniformMap[uniformName];
+    uniformShortNameToEntry[uniform.shortName] = uniform;
+  }
+  var publicVars = glslunit.NodeCollector.collectNodes(this.vertexAst,
+                                                       function(node) {
+    return node.type == 'declarator' &&
+           (node.typeAttribute.qualifier == 'attribute' ||
+            node.typeAttribute.qualifier == 'uniform');
+  });
+  goog.array.forEach(publicVars, function(publicVar) {
+    goog.array.forEach(publicVar.declarators, function(declarator) {
+      var varName = declarator.name.name;
+      var varType = publicVar.typeAttribute.name;
+      if (publicVar.typeAttribute.qualifier == 'attribute') {
+        var entry = attributeShortNameToEntry[varName];
+        if (!entry) {
+          entry = new glslunit.compiler.ShaderAttributeEntry();
+          entry.shortName = varName;
+          entry.originalName = varName;
+          var parsedSize = parseInt(varType.slice(3, 4), 10);
+          entry.variableSize = isNaN(parsedSize) ? 1 : parsedSize;
+          this.attributeMap[varName] = entry;
+        }
+      } else { // Has to be a uniform.
+        var entry = uniformShortNameToEntry[varName];
+        if (!entry) {
+          entry = new glslunit.compiler.ShaderUniformEntry();
+          entry.shortName = varName;
+          entry.originalName = varName;
+          entry.type = varType;
+          this.uniformMap[varName] = entry;
+        }
+      }
+    }, this);
+  }, this);
 };

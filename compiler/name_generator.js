@@ -131,8 +131,8 @@ glslunit.compiler.NameGenerator.prototype.getNextNameIndex = function() {
 
 
 /**
- * Gets the next available short name.
- * @return {string} The next available short name.
+ * Clones the current NameGenerator
+ * @return {!glslunit.compiler.NameGenerator} The cloned NameGenerator.
  */
 glslunit.compiler.NameGenerator.prototype.clone = function() {
   var result = new glslunit.compiler.NameGenerator();

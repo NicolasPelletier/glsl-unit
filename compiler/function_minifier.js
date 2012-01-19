@@ -119,6 +119,7 @@ glslunit.compiler.FunctionMinifier.prototype.transformFunctionPrototype =
 /**
  * The name of this compilation step.
  * @type {string}
+ * @const
  */
 glslunit.compiler.FunctionMinifier.NAME = 'Function Minifier';
 
@@ -139,10 +140,15 @@ glslunit.compiler.FunctionMinifier.prototype.getDependencies =
 /** @override */
 glslunit.compiler.FunctionMinifier.prototype.performStep =
     function(stepOutputMap, shaderProgram) {
-  var maxVertexId =
+  var maxVertexId = 0;
+  var maxFragmentId = 0;
+  if (glslunit.compiler.VariableMinifier.NAME in stepOutputMap) {
+    maxVertexId =
       stepOutputMap[glslunit.compiler.VariableMinifier.NAME]['vertexMaxId'];
-  var maxFragmentId =
+    maxFragmentId =
       stepOutputMap[glslunit.compiler.VariableMinifier.NAME]['fragmentMaxId'];
+  }
+
   var vertexTransformer = new glslunit.compiler.FunctionMinifier();
   vertexTransformer.nameGenerator_.nextNameIndex = maxVertexId;
 

@@ -44,7 +44,7 @@ glslunit.CallGraphVisitor = function() {
 
   /**
    * The name of the function currently being visited.
-   * @type {?string}
+   * @type {string}
    * @private
    */
   this.currentFunctionName_ = glslunit.CallGraphVisitor.ROOT_NAME;
