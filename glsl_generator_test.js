@@ -17,10 +17,8 @@
  */
 
 goog.require('glslunit.Generator');
+goog.require('goog.testing.jsunit');
 
-
-function setUp() {
-}
 
 function testVisitIdentifier() {
   var identifierNode = {
@@ -445,7 +443,10 @@ function testIfStatement() {
     statements: []
   };
   testNode.elseBody = oldBody;
-  assertEquals('if(true){}else {return false;x-=12;}',
+  assertEquals('if(true){}else{return false;x-=12;}',
+               glslunit.Generator.getSourceCode(testNode));
+  testNode.elseBody = oldBody.statements[0];
+  assertEquals('if(true){}else return false;',
                glslunit.Generator.getSourceCode(testNode));
 }
 
@@ -571,7 +572,7 @@ function testDo() {
       statements: []
     }
   };
-  assertEquals('do {}while(i<23)', glslunit.Generator.getSourceCode(testNode));
+  assertEquals('do{}while(i<23)', glslunit.Generator.getSourceCode(testNode));
   testNode.body = {
     type: 'return',
     value: {

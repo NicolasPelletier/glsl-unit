@@ -6,6 +6,8 @@
  */
 goog.provide('glslunit.compiler.DemoCompiler');
 
+goog.require('glslunit.compiler.BraceReducer');
+goog.require('glslunit.compiler.ConversionMinifier');
 goog.require('glslunit.compiler.DeadFunctionRemover');
 goog.require('glslunit.compiler.DeclarationConsolidation');
 goog.require('glslunit.compiler.FunctionMinifier');
@@ -27,6 +29,10 @@ glslunit.compiler.DemoCompiler.prototype.compileProgram = function() {
                                                          'fragment_start');
 
   var compiler = new glslunit.compiler.Compiler(shaderProgram);
+  compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
+                        new glslunit.compiler.BraceReducer());
+  compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
+                        new glslunit.compiler.ConversionMinifier());
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
                         new glslunit.compiler.DeadFunctionRemover());
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,

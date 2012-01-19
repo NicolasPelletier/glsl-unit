@@ -22,18 +22,22 @@ goog.require('goog.object');
 var path = require('path');
 var fs = require('fs');
 
-goog.node.FLAGS.define_string('vertex_source', undefined,
-                              'The input vertex GLSL file.');
-goog.node.FLAGS.define_string('fragment_source', undefined,
-                              'The input fragment GLSL file.');
-goog.node.FLAGS.define_string('vertex_output', '',
-                              'The file to write the minified vertex GLSL to.');
-goog.node.FLAGS.define_string('fragment_output', '',
-                              'The file to write the minified fragment GLSL ' +
-                              'to.');
+goog.node.FLAGS.define_string('vertex_source', '', 'The input vertex GLSL.');
+goog.node.FLAGS.define_string('fragment_source', '',
+                              'The input fragment GLSL.');
 
 goog.node.FLAGS.parseArgs();
 
+
+/**
+ * Set of valid GLSL extensions.
+ * @type {Object.<string, boolean>}
+ * @const
+ */
+var GLSL_EXTENSIONS = {
+  '.glsl': true,
+  '.glsllib': true
+};
 
 
 function main() {
@@ -66,21 +70,14 @@ function main() {
 
   shaderProgram = compiler.compileProgram();
 
-  if (goog.node.FLAGS['vertex_output'] && goog.node.FLAGS['fragment_output']) {
-    fs.writeFile(goog.node.FLAGS['vertex_output'],
-                 glslunit.Generator.getSourceCode(shaderProgram.vertexAst));
-    fs.writeFile(goog.node.FLAGS['fragment_output'],
-                 glslunit.Generator.getSourceCode(shaderProgram.fragmentAst));
-  } else {
-    var resultString =
-       '//! VERTEX\n' +
-        glslunit.Generator.getSourceCode(shaderProgram.vertexAst,
-                                         '\\n') +
-        '\n//! FRAGMENT\n' +
-        glslunit.Generator.getSourceCode(shaderProgram.fragmentAst,
-                                         '\\n');
-    process.stdout.write(resultString);
-  }
+  var resultString =
+     '\n//! VERTEX\n' +
+      glslunit.Generator.getSourceCode(shaderProgram.vertexAst,
+                                       '\\n') +
+      '\n//! FRAGMENT\n' +
+      glslunit.Generator.getSourceCode(shaderProgram.fragmentAst,
+                                       '\\n');
+  process.stdout.write(resultString);
 }
 
 main();

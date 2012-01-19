@@ -460,7 +460,10 @@ glslunit.Generator.prototype.generateWhile_ = function(node) {
  * @export
  */
 glslunit.Generator.prototype.visitDoStatement = function(node) {
-  this.sourceCode_ += 'do ';
+  this.sourceCode_ += 'do';
+  if (node.body.type != 'scope') {
+    this.sourceCode_ += ' ';
+  }
   this.visitNode(node.body);
   this.generateWhile_(node);
 };
@@ -507,7 +510,10 @@ glslunit.Generator.prototype.visitIfStatement = function(node) {
   this.sourceCode_ += ')';
   this.visitNode(node.body);
   if (node.elseBody) {
-    this.sourceCode_ += 'else ';
+    this.sourceCode_ += 'else';
+    if (node.elseBody.type != 'scope') {
+      this.sourceCode_ += ' ';
+    }
     this.visitNode(node.elseBody);
   }
 };
@@ -728,9 +734,9 @@ glslunit.Generator.formatFloat = function(value) {
   // Strip trailing 0's
   floatStr = floatStr.replace(/0*$/g, '');
   var absVal = Math.abs(value);
-  var digits = Math.floor(Math.log(absVal)/Math.LN10);
+  var digits = Math.floor(Math.log(absVal) / Math.LN10);
   var expStr = (value < 0 ? '-' : '') +
-      absVal/Math.pow(10, digits) + 'e' + digits;
+      absVal / Math.pow(10, digits) + 'e' + digits;
   return floatStr.length <= expStr.length ? floatStr : expStr;
 };
 
@@ -776,7 +782,7 @@ glslunit.Generator.prototype.visitValue = function(node) {
  */
 glslunit.Generator.prototype.visitInt = function(node) {
   this.sourceCode_ += glslunit.Generator.formatInt(node.value);
-}
+};
 
 
 /**

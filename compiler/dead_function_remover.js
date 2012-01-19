@@ -104,6 +104,7 @@ glslunit.compiler.DeadFunctionRemover.prototype.transformFunctionPrototype =
 /**
  * The name of this compilation step.
  * @type {string}
+ * @const
  */
 glslunit.compiler.DeadFunctionRemover.NAME = 'DeadFunctionRemover';
 

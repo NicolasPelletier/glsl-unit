@@ -310,6 +310,7 @@ glslunit.compiler.VariableMinifier.prototype.transformIdentifier =
 /**
  * The name of this compilation step.
  * @type {string}
+ * @const
  */
 glslunit.compiler.VariableMinifier.NAME = 'VariableMinifier';
 

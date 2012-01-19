@@ -29,7 +29,7 @@ goog.provide('goog.node.commandLineFlag');
 goog.node.flagType = {
   STRING: 'string',
   BOOLEAN: 'boolean'
-}
+};
 
 
 /**
@@ -114,8 +114,8 @@ goog.node.FLAGS.definedFlags_ = {};
 /**
  * Defines a new string flag
  * @param {string} name The name of this flag.
- * @param {string} defaultValue The default value to return if the flag has not
- *     yet been set.
+ * @param {string|undefined} defaultValue The default value to return if the
+ *     flag has not yet been set.
  * @param {string} description The description of this flag.
  */
 goog.node.FLAGS.define_string = function(name, defaultValue, description) {
@@ -127,19 +127,21 @@ goog.node.FLAGS.define_string = function(name, defaultValue, description) {
   });
 };
 
+
 /**
  * Defines a new bool flag
  * @param {string} name The name of this flag.
- * @param {string} defaultValue The default value to return if the flag has not
- *     yet been set.
- * @param {boolean} description The description of this flag.
+ * @param {boolean|undefined} defaultValue The default value to return if the
+ *     flag has not yet been set.
+ * @param {string} description The description of this flag.
  */
 goog.node.FLAGS.define_bool = function(name, defaultValue, description) {
   var newFlag = new goog.node.commandLineFlag(name, goog.node.flagType.BOOLEAN,
                                               defaultValue, description);
   goog.node.FLAGS.definedFlags_[name] = newFlag;
   goog.node.FLAGS.__defineGetter__(name, function() {
-    return Boolean(newFlag.getValue());
+    var flagValue = newFlag.getValue();
+    return Boolean(/^[tT]rue$/.test(flagValue));
   });
 };
 
@@ -153,7 +155,7 @@ goog.node.FLAGS.parseArgs = function() {
   var lastParam = null;
   process.argv.forEach(function(value, index, array) {
     // First two arguments are 'node' and the module name.
-    if (index <=1 ) {
+    if (index <= 1) {
       return;
     }
     if (value == '--help') {
@@ -195,6 +197,9 @@ goog.node.FLAGS.parseArgs = function() {
 };
 
 
+/**
+ * Outputs the help string to stdout.
+ */
 goog.node.FLAGS.printHelp = function() {
   var helpString = 'Flags:\n';
   for (var flagName in goog.node.FLAGS.definedFlags_) {
@@ -207,4 +212,4 @@ goog.node.FLAGS.printHelp = function() {
     }
   }
   process.stdout.write(helpString);
-}
+};
