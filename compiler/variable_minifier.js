@@ -13,6 +13,7 @@ goog.require('glslunit.compiler.NameGenerator');
 goog.require('glslunit.compiler.ShaderAttributeEntry');
 goog.require('glslunit.compiler.ShaderProgram');
 goog.require('glslunit.compiler.ShaderUniformEntry');
+goog.require('glslunit.NodeCollector');
 goog.require('goog.object');
 
 
@@ -67,6 +68,22 @@ goog.inherits(glslunit.compiler.VariableMinifier, glslunit.ASTTransformer);
 
 
 /**
+ * Returns whether or not a declarator node should have its declarator items
+ * renamed.
+ * @param {!Object} declaratorNode The shader program
+ *     being optimized.
+ */
+glslunit.compiler.VariableMinifier.prototype.shouldRenameNode_ =
+    function(declaratorNode) {
+  var qualifier = declaratorNode.typeAttribute.qualifier;
+  return ((this.minifyPublicVariables_ ||
+              (qualifier != 'uniform' && qualifier != 'attribute')) &&
+          !(declaratorNode.id in this.structDeclaratorNodes_));    
+          
+};
+
+
+/**
  * Sets the shader program we're optimizing.
  * @param {glslunit.compiler.ShaderProgram} shaderProgram The shader program
  *     being optimized.
@@ -86,6 +103,14 @@ glslunit.compiler.VariableMinifier.prototype.setShaderProgram =
  */
 glslunit.compiler.VariableMinifier.prototype.beforeTransformRoot =
     function(node) {
+  var structNodes = glslunit.NodeCollector.collectNodes(node, 
+      function(x, stack) {
+    return (x.type == 'declarator' &&
+            stack.slice(-1)[0].type == 'struct_definition');
+  });
+  goog.array.forEach(structNodes, function(structDeclarator) {
+    this.structDeclaratorNodes_[structDeclarator.id] = true;
+  }, this);
   // We want to export the renaming of varyings and uniforms to the fragment
   // shader so the renaming is uniform across the two.  Therefore, we keep track
   // of two levels of globals, the ones that are to be exported, or the root
@@ -95,14 +120,14 @@ glslunit.compiler.VariableMinifier.prototype.beforeTransformRoot =
   var globals =
       glslunit.VariableScopeVisitor.getVariablesInScope(node, node, true);
   for (var globalName in globals) {
-    var globalQualifier = globals[globalName].typeAttribute.qualifier;
-    if (globalQualifier == 'varying' ||
-        (this.minifyPublicVariables_ && globalQualifier == 'uniform')) {
-      this.currentNameGenerator_.shortenSymbol(globalName);
-    } else if (!(!this.minifyPublicVariables_ &&
-                   (globalQualifier == 'attribute' ||
-                        globalQualifier == 'uniform'))) {
+    var declaratorNode = globals[globalName];
+    if (this.shouldRenameNode_(declaratorNode)) {
+      var globalQualifier = declaratorNode.typeAttribute.qualifier;
+      if (globalQualifier == 'varying' || globalQualifier == 'uniform')) {
+        this.currentNameGenerator_.shortenSymbol(globalName);
+      } else {
         localGlobals.push(globalName);
+      }
     }
   }
   this.pushStack_(node);

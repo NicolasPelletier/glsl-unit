@@ -39,9 +39,18 @@ glslunit.NodeCollector = function(filterFunction) {
    */
   this.collectedNodes_ = [];
 
+    /**
+   * The stack of parent nodes.
+   * @type {!Array.<!Object>}
+   * @private
+   */
+  this.nodeStack_ = [];
+
   /**
-   * Function used to filter out nodes being stored.
-   * @type {function(!Object):boolean}
+   * Function used to filter out nodes being stored.  The first argument is the 
+   * node being tested, the second argument is the current stack of nodes,
+   * excluding the current node being tested.
+   * @type {function(!Object,Array.<!Object>=):boolean}
    * @private
    */
   this.filterFunction_ = filterFunction;
@@ -55,7 +64,7 @@ goog.inherits(glslunit.NodeCollector, glslunit.ASTVisitor);
  * @private
  */
 glslunit.NodeCollector.prototype.maybeCollectNode_ = function(node) {
-  if (this.filterFunction_(node)) {
+  if (this.filterFunction_(node, this.nodeStack_.slice(-1))) {
     this.collectedNodes_.push(node);
   }
   this.genericVisitor(node);
@@ -69,6 +78,28 @@ glslunit.NodeCollector.prototype.maybeCollectNode_ = function(node) {
  */
 glslunit.NodeCollector.prototype.getCollectedNodes = function() {
   return this.collectedNodes_;
+};
+
+
+/**
+ * Overrides the beforeVisit function to always push the current node
+ * @param {!Object} node The node about to be visited.
+ * @return {function(!Object)} A function to push the current node on the stack.
+ * @override
+ */
+glslunit.NodeCollector.prototype.getBeforeVisitFunction = function(node) {
+  return goog.bind(Array.prototype.push, this.nodeStack_);
+};
+
+
+/**
+ * Overrides the beforeVisit function to always push the current node
+ * @param {!Object} node The node about to be visited.
+ * @return {function(!Object)} A function to push the current node on the stack.
+ * @override
+ */
+glslunit.NodeCollector.prototype.getAfterVisitFunction = function(node) {
+  return goog.bind(Array.prototype.pop, this.nodeStack_);
 };
 
 

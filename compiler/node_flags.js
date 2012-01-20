@@ -211,5 +211,5 @@ goog.node.FLAGS.printHelp = function() {
       helpString += '\n    (required)\n';
     }
   }
-  process.stdout.write(helpString);
+  process.stdout.write(helpString + '\n');
 };

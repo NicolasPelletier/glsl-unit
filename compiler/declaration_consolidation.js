@@ -62,6 +62,13 @@ glslunit.compiler.DeclarationConsolidation = function(consolidateAttributes) {
   this.forInitializerNodes_ = [];
 
   /**
+   * Set of node IDs that are declarators inside of struct definitions.
+   * @type {Array.<boolean>}
+   * @private
+   */
+  this.structDeclaratorNodes_ = [];
+
+  /**
    * Whether or not to consolidate attribute values.
    * @type {boolean}
    * @private
@@ -82,11 +89,20 @@ goog.inherits(glslunit.compiler.DeclarationConsolidation,
 glslunit.compiler.DeclarationConsolidation.prototype.beforeTransformRoot =
       function(node) {
   // First, find all of the for loops and keep track of their initalizer nodes.
+  // We also find all declarator nodes inside of struct definitions.
   var forNodes = glslunit.NodeCollector.collectNodes(node, function(x) {
     return x.type == 'for_statement';
   });
   goog.array.forEach(forNodes, function(forNode) {
     this.forInitializerNodes_[forNode.initializer.id] = true;
+  }, this);
+  var structNodes = glslunit.NodeCollector.collectNodes(node, 
+      function(x, stack) {
+    return (x.type == 'declarator' &&
+            stack.slice(-1)[0].type == 'struct_definition');
+  });
+  goog.array.forEach(structNodes, function(structDeclarator) {
+    this.structDeclaratorNodes_[structDeclarator.id] = true;
   }, this);
 
   // Second, gather all declarations and organize them by scope and type.
@@ -216,6 +232,7 @@ glslunit.compiler.DeclarationConsolidation.prototype.
           declarator.typeAttribute.qualifier != 'const' &&
           (!declarator_items || declarator_items.length > 1) &&
           !(declarator.id in this.forInitializerNodes_) &&
+          !(declarator.id in this.structDeclaratorNodes_) &&
           // If this is a global scope declaration, we can't consolidate the
           // declarator items if they have initializers since we wouldn't be
           // able to move the initialization to a new line.  Once we do some

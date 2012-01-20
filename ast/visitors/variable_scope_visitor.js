@@ -204,7 +204,7 @@ glslunit.VariableScopeVisitor.prototype.beforeVisitPreprocessor =
  * @export
  */
 glslunit.VariableScopeVisitor.prototype.afterVisitRoot =
-  glslunit.VariableScopeVisitor.prototype.afterVisitScope;
+    glslunit.VariableScopeVisitor.prototype.afterVisitScope;
 
 
 /**
