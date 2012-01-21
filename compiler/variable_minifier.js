@@ -133,7 +133,8 @@ glslunit.compiler.VariableMinifier.prototype.beforeTransformRoot =
     var declaratorNode = globals[globalName];
     if (this.shouldRenameNode_(declaratorNode)) {
       var globalQualifier = declaratorNode.typeAttribute.qualifier;
-      if (globalQualifier == 'varying' || globalQualifier == 'uniform') {
+      if (globalQualifier == 'varying' || globalQualifier == 'uniform' || 
+              globalQualifier == 'attribute') {
         this.currentNameGenerator_.shortenSymbol(globalName);
       } else {
         localGlobals.push(globalName);

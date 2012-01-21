@@ -98,7 +98,7 @@ function main() {
       path.basename(goog.node.FLAGS.input),
       inputFiles);
   } catch (e) {
-    console.error(e);
+    console.error(e.message);
     process.exit(1);
   }
   var originalProgram = /** @type {glslunit.compiler.ShaderProgram} */

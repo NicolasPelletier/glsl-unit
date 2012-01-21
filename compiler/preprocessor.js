@@ -150,6 +150,7 @@ glslunit.compiler.Preprocessor.ParseFile = function(fileName, libraryFiles) {
 
   var program = result.program;
   try {
+    console.error('Vertex Source:\n' + result.vertexSource + '\n');
     program.vertexAst = glslunit.glsl.parser.parse(result.vertexSource,
                                                    'vertex_start');
   } catch (e) {
@@ -159,6 +160,7 @@ glslunit.compiler.Preprocessor.ParseFile = function(fileName, libraryFiles) {
                                                            libraryFiles);
   }
   try {
+    console.error('Fragment Source:\n' + result.fragmentSource + '\n');
     program.fragmentAst = glslunit.glsl.parser.parse(result.fragmentSource,
                                                      'fragment_start');
   } catch (e) {
