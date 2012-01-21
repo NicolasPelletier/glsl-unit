@@ -18,7 +18,10 @@ function setUp() {
       'vec4 bar = vec4(1.2, 0., 3.2, 3.001);' +
       'vec4 meh = vec4(1.2, 1., 1.2, 1.);' +
       'bvec2 raz = bvec2(false, true);' +
-      'ivec3 baz = ivec3(1., 1, 1);';
+      'ivec3 baz = ivec3(1., 1, 1);' +
+      'mat2 m2 = mat2(vec3(1),1);' +
+      'mat2 m2a = mat2(1,1,1,1);' +
+      'mat2 m2b = mat2(41.,0,0,41.);';
 }
 
 
@@ -28,7 +31,10 @@ function testConstructorMinifier() {
       'vec4 bar=vec4(1.2,0,3.2,3.001);' +
       'vec4 meh=vec4(1.2,1,1.2,1);' +
       'bvec2 raz=bvec2(0,1);' +
-      'ivec3 baz=ivec3(1);';
+      'ivec3 baz=ivec3(1);' +
+      'mat2 m2=mat2(vec3(1),1);' +
+      'mat2 m2a=mat2(1,1,1,1);' +
+      'mat2 m2b=mat2(41);';
   var minifier = new glslunit.compiler.ConstructorMinifier();
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);

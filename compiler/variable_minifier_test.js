@@ -30,6 +30,10 @@ Object.keys = function(obj) {
 function setUp() {
   vertexSource =
     'float someMethod(const int foo, float bar);' +
+    'struct someStruct{' +
+    '  int field1, field2;' +
+    '  vec2 field3;' +
+    '};' +
     'attribute vec3 attr, anotherAttr;' +
     'void methodOrVariable(){}' +
     'uniform float uGlobal;' +
@@ -58,6 +62,10 @@ function setUp() {
 function testVariableMinifier() {
   var expectedVertex =
     'float someMethod(const int e,float f);' +
+    'struct someStruct{' +
+    'int field1,field2;' +
+    'vec2 field3;' +
+    '};' +
     'attribute vec3 c,d;' +
     'void methodOrVariable(){}' +
     'uniform float a;' +
@@ -99,6 +107,10 @@ function testVariableMinifier() {
 function testVariableMinifierNoMinifyPublic() {
   var expectedVertex =
     'float someMethod(const int b,float c);' +
+    'struct someStruct{' +
+    'int field1,field2;' +
+    'vec2 field3;' +
+    '};' +
     'attribute vec3 attr,anotherAttr;' +
     'void methodOrVariable(){}' +
     'uniform float uGlobal;' +

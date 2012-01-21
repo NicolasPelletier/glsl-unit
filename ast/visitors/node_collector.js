@@ -47,7 +47,7 @@ glslunit.NodeCollector = function(filterFunction) {
   this.nodeStack_ = [];
 
   /**
-   * Function used to filter out nodes being stored.  The first argument is the 
+   * Function used to filter out nodes being stored.  The first argument is the
    * node being tested, the second argument is the current stack of nodes,
    * excluding the current node being tested.
    * @type {function(!Object,Array.<!Object>=):boolean}
@@ -64,7 +64,7 @@ goog.inherits(glslunit.NodeCollector, glslunit.ASTVisitor);
  * @private
  */
 glslunit.NodeCollector.prototype.maybeCollectNode_ = function(node) {
-  if (this.filterFunction_(node, this.nodeStack_.slice(-1))) {
+  if (this.filterFunction_(node, this.nodeStack_.slice(0, -1))) {
     this.collectedNodes_.push(node);
   }
   this.genericVisitor(node);

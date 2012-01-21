@@ -63,6 +63,13 @@ glslunit.compiler.VariableMinifier = function(minifyPublicVariables) {
    * @private
    */
   this.minifyPublicVariables_ = minifyPublicVariables;
+
+  /**
+   * Set of node IDs that are declarators inside of struct definitions.
+   * @type {Array.<boolean>}
+   * @private
+   */
+  this.structDeclaratorNodes_ = [];
 };
 goog.inherits(glslunit.compiler.VariableMinifier, glslunit.ASTTransformer);
 
@@ -70,16 +77,19 @@ goog.inherits(glslunit.compiler.VariableMinifier, glslunit.ASTTransformer);
 /**
  * Returns whether or not a declarator node should have its declarator items
  * renamed.
- * @param {!Object} declaratorNode The shader program
+ * @param {Object} declaratorNode The shader program
  *     being optimized.
  */
 glslunit.compiler.VariableMinifier.prototype.shouldRenameNode_ =
     function(declaratorNode) {
+  if (!declaratorNode) {
+    return false;
+  }
   var qualifier = declaratorNode.typeAttribute.qualifier;
   return ((this.minifyPublicVariables_ ||
               (qualifier != 'uniform' && qualifier != 'attribute')) &&
-          !(declaratorNode.id in this.structDeclaratorNodes_));    
-          
+          !(declaratorNode.id in this.structDeclaratorNodes_));
+
 };
 
 
@@ -103,7 +113,7 @@ glslunit.compiler.VariableMinifier.prototype.setShaderProgram =
  */
 glslunit.compiler.VariableMinifier.prototype.beforeTransformRoot =
     function(node) {
-  var structNodes = glslunit.NodeCollector.collectNodes(node, 
+  var structNodes = glslunit.NodeCollector.collectNodes(node,
       function(x, stack) {
     return (x.type == 'declarator' &&
             stack.slice(-1)[0].type == 'struct_definition');
@@ -123,7 +133,7 @@ glslunit.compiler.VariableMinifier.prototype.beforeTransformRoot =
     var declaratorNode = globals[globalName];
     if (this.shouldRenameNode_(declaratorNode)) {
       var globalQualifier = declaratorNode.typeAttribute.qualifier;
-      if (globalQualifier == 'varying' || globalQualifier == 'uniform')) {
+      if (globalQualifier == 'varying' || globalQualifier == 'uniform') {
         this.currentNameGenerator_.shortenSymbol(globalName);
       } else {
         localGlobals.push(globalName);
@@ -286,9 +296,7 @@ glslunit.compiler.VariableMinifier.prototype.beforeTransformDeclaratorItem =
   }
   // If we are minifying public variables or if this variable is not a public
   // variable, then shorten it.
-  if (this.minifyPublicVariables_ ||
-          !(qualifier &&
-              (qualifier == 'attribute' || qualifier == 'uniform'))) {
+  if (this.shouldRenameNode_(this.currentDeclaratorNode_)) {
     newName = this.currentNameGenerator_.shortenSymbol(node.name.name);
   }
   // If we've got a shader program specified and this identifier was a child

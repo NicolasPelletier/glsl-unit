@@ -132,10 +132,31 @@ glslunit.compiler.ConstructorMinifier.prototype.transformFunctionCall =
           glslunit.compiler.ConstructorMinifier.CONVERSION_FUNCTIONS_ &&
       node.parameters && node.parameters.length > 1) {
     var firstParam = glslunit.Generator.getSourceCode(node.parameters[0]);
-    var allEqual = goog.array.every(node.parameters, function(parameter) {
-      return glslunit.Generator.getSourceCode(parameter) == firstParam;
-    });
-    if (allEqual) {
+    var minifyDeclaration = false;
+    if (node.function_name.slice(0, 3) != 'mat') {
+      var allEqual = goog.array.every(node.parameters, function(parameter) {
+        return glslunit.Generator.getSourceCode(parameter) == firstParam;
+      });
+      if (allEqual) {
+        minifyDeclaration = true;
+      }
+    } else {
+      var dimensions = parseInt(node.function_name.slice(-1), 10);
+      if (node.parameters.length == dimensions * dimensions) {
+        var isIdent = true;
+        for (var i = 0; i < dimensions; i++) {
+          for (var j = 0; j < dimensions; j++) {
+            var cell = glslunit.Generator.getSourceCode(
+                node.parameters[i * dimensions + j]);
+            isIdent = isIdent && cell == (i == j ? firstParam : '0');
+          }
+        }
+        if (isIdent) {
+          minifyDeclaration = true;
+        }
+      }
+    }
+    if (minifyDeclaration) {
       var result = glslunit.ASTTransformer.cloneNode(node);
       result.parameters = [node.parameters[0]];
       return result;

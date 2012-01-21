@@ -15,6 +15,10 @@ goog.require('goog.testing.jsunit');
 function setUp() {
   inputSource =
     'float someMethod(const int foo, float bar);' +
+    'struct someStruct{' +
+    '  int field1, field2;' +
+    '  vec2 field3;' +
+    '};' +
     'attribute vec3 hello;' +
     'attribute vec3 world;\n' +
     '#ifdef FOO\n' +
@@ -49,6 +53,10 @@ function testDeclarationConsolidation() {
     // These should be two separate declarations since one is an attribute and
     // the other is not.
     'float someMethod(const int foo,float bar);' +
+    'struct someStruct{' +
+    'int field1,field2;' +
+    'vec2 field3;' +
+    '};' +
     'attribute vec3 hello;' +
     'attribute vec3 world;\n' +
     '#ifdef FOO\n' +
@@ -87,6 +95,10 @@ function testDeclarationConsolidationAttributes() {
     // These should be two separate declarations since one is an attribute and
     // the other is not.
     'float someMethod(const int foo,float bar);' +
+    'struct someStruct{' +
+    'int field1,field2;' +
+    'vec2 field3;' +
+    '};' +
     'attribute vec3 hello,world,how_are_you;\n' +
     '#ifdef FOO\n' +
     'attribute vec3 foo_def;\n' +

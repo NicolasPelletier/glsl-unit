@@ -30,11 +30,26 @@ function testNodeCollector() {
     '  float meh;' +
     '}';
   var testAst = glslunit.glsl.parser.parse(testSource);
-  var cNodes = glslunit.NodeCollector.collectNodes(testAst, function(node) {
-    return node.type == 'declarator' &&
-    node.typeAttribute.qualifier == 'varying';
+  var cNodes = glslunit.NodeCollector.collectNodes(testAst,
+      function(node, parentStack) {
+    var result = node.type == 'declarator' &&
+        node.typeAttribute.qualifier == 'varying';
+    if (result) {
+      assertEquals(1, parentStack.length);
+      assertEquals('root', parentStack[0].type)
+    }
+    return result;
   });
   assertEquals(1, cNodes.length);
   assertEquals('varying vec2 bar,bbarr;',
                glslunit.Generator.getSourceCode(cNodes[0]));
+  cNodes = glslunit.NodeCollector.collectNodes(testAst,
+      function(node, parentStack) {
+    var result = node.type == 'declarator_item' &&
+        node.name.name == 'meh';
+    if (result) {
+      assertEquals(4, parentStack.length);
+    }
+    return result;
+  });
 }
