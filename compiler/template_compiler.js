@@ -26,10 +26,6 @@ var fs = require('fs');
 
 goog.node.FLAGS.define_string('input', undefined, 'The input file in GLSL.');
 goog.node.FLAGS.define_string('output', '', 'The output js file.');
-goog.node.FLAGS.define_string('source_output', '',
-                              'The output shader source code file.');
-goog.node.FLAGS.define_string('uniform_and_mode_output', '',
-                             'The output uniform and mode information file.');
 goog.node.FLAGS.define_string('template', '',
                               'The output shader source code file.');
 goog.node.FLAGS.define_string('glsl_include_prefix', '',
@@ -122,6 +118,7 @@ function main() {
         new glslunit.compiler.BraceReducer());
   }
   if (goog.node.FLAGS.variable_renaming in all_internal_map) {
+    console.error(goog.node.FLAGS.variable_renaming);
     compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
         new glslunit.compiler.VariableMinifier(
             all_internal_map[goog.node.FLAGS.variable_renaming]));
@@ -164,20 +161,6 @@ function main() {
     fs.writeFileSync(goog.node.FLAGS.output, output);
   } else {
     process.stdout.write(output);
-  }
-
-  if (goog.node.FLAGS.uniform_and_mode_output) {
-    fs.writeFileSync(
-        goog.node.FLAGS.uniform_and_mode_output,
-        glslunit.compiler.ShaderClassGenerator.generateUniformAndModes(
-            shaderProgram));
-  }
-
-  if (goog.node.FLAGS.source_output) {
-    fs.writeFileSync(
-        goog.node.FLAGS.source_output,
-        glslunit.compiler.ShaderClassGenerator.generateSourceClass(
-            originalProgram));
   }
 }
 

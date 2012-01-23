@@ -15,8 +15,9 @@
 //! INCLUDE CommonInclude.glsllib
 //! INCLUDE VertexInclude.glsllib
 //! INCLUDE Lights.glsllib
+//! JSREQUIRE J3D.Constants
+//! JSCONST POINTSIZE J3D.Constants.PointSize
 //! COMMON
-//! JSCONST POINTSIZE 5.0
 varying vec4 vPosition;
 varying vec2 vTextureCoord;
 varying vec3 vNormal;
@@ -44,4 +45,9 @@ void main(void) {
 	if(hasColorTexture) tc *= texture2D(colorTexture, vTextureCoord);	
 	vec3 l = computeLights(vPosition, vNormal, specularIntensity, shininess);	
 	gl_FragColor = vec4(tc.rgb * l, color.a);
+}
+
+//! OVERRIDE luminance baseLuminance
+float luminance(vec3 c) {
+    return dot(c.rgb * vec3(0.299, 0.587 , 0.114), vec3(1.0));
 }

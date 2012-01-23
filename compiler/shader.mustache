@@ -20,7 +20,7 @@ goog.require('{{.}}');
 {{namespace}}.{{className}}.JS_CONST =
 {{#jsConsts}}
   '#define {{value}} \' +\n' +
-  '      ({{expression}}) +\n' +
+        ({{expression}}) + '\n' +
   '      \'\\n' +
 {{/jsConsts}}
   '';
@@ -39,7 +39,7 @@ goog.require('{{.}}');
  * @const
  */
 {{namespace}}.{{className}}.FRAGMENT_SOURCE =
-        {{namespace}}.{{className}}.JS_CONST + '{{{getFragmentSource}}}';
+        {{namespace}}.{{className}}.JS_CONST + '{{{getFragmentSource}}}	';
 
 /**
  * Map of uniform original name to its minified name.
