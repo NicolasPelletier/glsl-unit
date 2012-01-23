@@ -178,7 +178,6 @@ goog.node.FLAGS.parseArgs = function() {
     if (flag && flagValue) {
       flag = flag.slice(2);
       if (flag in goog.node.FLAGS.definedFlags_) {
-        console.error('Setting' + flag + ' to ' + flagValue);
         goog.node.FLAGS.definedFlags_[flag].value = flagValue;
       } else {
         console.error('Unknown flag ' + flag);
