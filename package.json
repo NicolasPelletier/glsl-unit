@@ -8,7 +8,7 @@
     "email": "rowillia@google.com"
   },
   "bin": {
-    "glsl-compiler": "bin/basic_glsl_compiler.js"
+    "glsl-compiler": "bin/template_glsl_compiler.js"
   },
   "repository": {
     "type": "git",
