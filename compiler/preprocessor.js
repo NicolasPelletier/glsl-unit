@@ -148,28 +148,27 @@ glslunit.compiler.Preprocessor.ParseFile = function(fileName, libraryFiles) {
       fileName, libraryFiles,
       vertexSourceMap, fragmentSourceMap);
 
-  var program = result.program;
   try {
-    program.vertexAst = glslunit.glsl.parser.parse(result.vertexSource,
-                                                   'vertex_start');
+    result.vertexAst =
+        glslunit.glsl.parser.parse(result.originalVertexSource,
+                                   'vertex_start');
   } catch (e) {
-    console.error('Vertex Source:\n' + result.vertexSource + '\n');
     throw glslunit.compiler.Preprocessor.FormatParseError_(e,
                                                            'vertex',
                                                            vertexSourceMap,
                                                            libraryFiles);
   }
   try {
-    program.fragmentAst = glslunit.glsl.parser.parse(result.fragmentSource,
-                                                     'fragment_start');
+    result.fragmentAst =
+        glslunit.glsl.parser.parse(result.originalFragmentSource,
+                                   'fragment_start');
   } catch (e) {
-    console.error('Fragment Source:\n' + result.fragmentSource + '\n');
     throw glslunit.compiler.Preprocessor.FormatParseError_(e,
                                                            'fragment',
                                                            fragmentSourceMap,
                                                            libraryFiles);
   }
-  return program;
+  return result;
 };
 
 
@@ -213,9 +212,7 @@ glslunit.compiler.Preprocessor.FormatParseError_ = function(exception,
  *     mapping line numbers to their source file for the vertex program.
  * @param {!Array.<{fileName: string, localLine: number}>} fragmentSourceMap
  *     Array mapping line numbers to their source file for the vertex program.
- * @return {{program: glslunit.compiler.ShaderProgram,
- *           vertexSource: string,
- *           fragmentSource: string}} The parsed program data.
+ * @return {glslunit.compiler.ShaderProgram} The parsed program data.
  * @private
  */
 glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
@@ -225,8 +222,6 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
   var inVertex = true;
   var inFragment = true;
   var result = new glslunit.compiler.ShaderProgram();
-  var vertexSource = '';
-  var fragmentSource = '';
   var fileSource = libraryFiles[fileName];
   goog.array.forEach(fileSource.split('\n'), function(line, index) {
     var match;
@@ -272,12 +267,14 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
       result.shaderModes.push(mode);
     } else if (match = glslunit.compiler.RE_OVERRIDE_.exec(line)) {
       if (inFragment) {
-        fragmentSource = glslunit.compiler.Preprocessor.OverrideFunction_(
-            match[1], match[2], fragmentSource);
+        result.originalFragmentSource =
+            glslunit.compiler.Preprocessor.OverrideFunction_(
+                match[1], match[2], result.originalFragmentSource);
       }
       if (inVertex) {
-        vertexSource = glslunit.compiler.Preprocessor.OverrideFunction_(
-          match[1], match[2], vertexSource);
+        result.originalVertexSource =
+            glslunit.compiler.Preprocessor.OverrideFunction_(
+                match[1], match[2], result.originalVertexSource);
       }
     } else if (match = glslunit.compiler.RE_JSREQUIRE_.exec(line)) {
       result.jsRequires.push(match[1]);
@@ -285,11 +282,11 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
       result.jsConsts.push({value: match[1], expression: match[2]});
     }
     if (inFragment) {
-      fragmentSource += line + '\n';
+      result.originalFragmentSource += line + '\n';
       fragmentSourceMap.push({fileName: fileName, localLine: index});
     }
     if (inVertex) {
-      vertexSource += line + '\n';
+      result.originalVertexSource += line + '\n';
       vertexSourceMap.push({fileName: fileName, localLine: index});
     }
     // Add in include code after appending comment to source code to keep things
@@ -302,21 +299,17 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
               libraryFiles,
               vertexSourceMap,
               fragmentSourceMap);
-      vertexSource += includedProgram.vertexSource;
-      fragmentSource += includedProgram.fragmentSource;
+      result.originalVertexSource += includedProgram.originalVertexSource;
+      result.originalFragmentSource += includedProgram.originalFragmentSource;
       Array.prototype.push.apply(result.shaderModes,
-                                 includedProgram.program.shaderModes);
+                                 includedProgram.shaderModes);
       Array.prototype.push.apply(result.jsRequires,
-                                 includedProgram.program.jsRequires);
+                                 includedProgram.jsRequires);
       Array.prototype.push.apply(result.jsConsts,
-                                 includedProgram.program.jsConsts);
+                                 includedProgram.jsConsts);
     }
   });
-  return {
-    program: result,
-    vertexSource: vertexSource,
-    fragmentSource: fragmentSource
-  };
+  return result;
 };
 
 

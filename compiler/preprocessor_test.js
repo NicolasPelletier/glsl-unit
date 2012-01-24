@@ -43,6 +43,43 @@ function setUp() {
 
 
 function testPreprocessor() {
+  var originalVertex =
+    '//! NAMESPACE=glslunit.test\n' +
+    '//! CLASS=TestShader\n' +
+    '//! SUPERCLASS=TestSuper\n' +
+    '//! MODE SOME_MODE Zero:0,One:1,Two:2\n' +
+    '//! INCLUDE shaderinclude.glsl\n' +
+    '//! VERTEX\n' +
+    '//! MODE INCLUDE_DEFAULT\n' +
+    '//! JSREQUIRE foo.bar\n' +
+    '//! JSCONST VAL1 1 * 55 / 2.\n' +
+    'attribute vec2 vertexIncludeVar;\n\n' +
+    '//! JSREQUIRE raz\n' +
+    '//! JSCONST VAL2 raz.FOOBAR\n' +
+    'uniform float commonVar;\n' +
+    '//! COMMON\n' +
+    'void CommonFunc(){}\n' +
+    '//! VERTEX\n' +
+    'void vertexMain();void baseVertexMain(){}\n' +
+    'float lastVar;\n' +
+    '//! OVERRIDE vertexMain baseVertexMain\n';
+
+  var originalFragment =
+    '//! NAMESPACE=glslunit.test\n' +
+    '//! CLASS=TestShader\n' +
+    '//! SUPERCLASS=TestSuper\n' +
+    '//! MODE SOME_MODE Zero:0,One:1,Two:2\n' +
+    '//! INCLUDE shaderinclude.glsl\n' +
+    '//! JSREQUIRE raz\n' +
+    '//! JSCONST VAL2 raz.FOOBAR\n' +
+    'uniform float commonVar;\n' +
+    '//! FRAGMENT\n' +
+    'varying vec2 FRAG_VAR;\n' +
+    '//! COMMON\n' +
+    'void CommonFunc();void baseCommonFunc(){}\n' +
+    '//! FRAGMENT\n' +
+    '//! OVERRIDE CommonFunc baseCommonFunc\n\n';
+
   var libraries = {
     'main.glsl': shaderInput,
     'shaderinclude.glsl': shaderInclude
@@ -51,6 +88,8 @@ function testPreprocessor() {
   assertEquals('glslunit.test', result.namespace);
   assertEquals('TestShader', result.className);
   assertEquals('TestSuper', result.superClass);
+  assertEquals(originalVertex, result.originalVertexSource);
+  assertEquals(originalFragment, result.originalFragmentSource);
   var expectedFragmentSource =
     'uniform float commonVar;' +
     'varying vec2 FRAG_VAR;' +
