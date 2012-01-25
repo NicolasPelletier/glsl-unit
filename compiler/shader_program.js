@@ -173,6 +173,12 @@ glslunit.compiler.ShaderProgram = function() {
    * @type {!Array.<{value: string, expression: string}>}
    */
   this.jsConsts = [];
+
+  /**
+   * Map of properties to be passed down to the template
+   * @type {!Object.<string, string>}
+   */
+  this.templateProperties = {};
 };
 
 

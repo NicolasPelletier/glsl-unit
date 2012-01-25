@@ -58,6 +58,9 @@ goog.node.FLAGS.define_bool('minify_constructors', true,
 goog.node.FLAGS.define_bool('pretty_print', false,
     'Output pretty-printed GLSL source code.');
 
+goog.node.FLAGS.define_string_array('tempalte_property', [],
+    'Properties to be passed down to template for rendering.');
+
 goog.node.FLAGS.parseArgs();
 
 
@@ -118,7 +121,6 @@ function main() {
         new glslunit.compiler.BraceReducer());
   }
   if (goog.node.FLAGS.variable_renaming in all_internal_map) {
-    console.error(goog.node.FLAGS.variable_renaming);
     compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
         new glslunit.compiler.VariableMinifier(
             all_internal_map[goog.node.FLAGS.variable_renaming]));
@@ -136,12 +138,22 @@ function main() {
     compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
         new glslunit.compiler.ConstructorMinifier());
   }
-
   shaderProgram = compiler.compileProgram();
   shaderProgram.prettyPrint = goog.node.FLAGS.pretty_print;
 
   finish = new Date().getTime();
 
+  var templateProperties = {};
+  goog.node.FLAGS.tempalte_property.forEach(function(property) {
+    var keyVal = property.split('=', 2);
+    if (keyVal.length != 2) {
+      console.error('Invalid template property: ' + property);
+      process.exit(1);
+    }
+    templateProperties[keyVal[0]] = keyVal[1];
+  });
+  shaderProgram.templateProperties = templateProperties;
+  
   var output = '';
   if (goog.node.FLAGS.template) {
     var template = false;

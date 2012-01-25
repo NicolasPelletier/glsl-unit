@@ -28,6 +28,7 @@ goog.provide('goog.node.commandLineFlag');
  */
 goog.node.flagType = {
   STRING: 'string',
+  STRING_ARRAY: 'string_array',
   BOOLEAN: 'boolean'
 };
 
@@ -94,6 +95,50 @@ goog.node.commandLineFlag.prototype.getValue = function() {
   return this.defaultValue;
 };
 
+/**
+ * Sets the current value for this flag.
+ * @return {*} The value of the flag.
+ */
+goog.node.commandLineFlag.prototype.parseValue = function(value) {
+  this.value = value;
+};
+
+
+/**
+ * Object for storing an instance of a command line flag that stores array
+ * values.
+ * @param {string} name The name of this flag.
+ * @param {goog.node.flagType} type The type of this flag.
+ * @param {Array<*>} defaultValue The default value to return if the flag has
+ *     not yet been set.
+ * @param {string} description The description of this flag.
+ * @constructor
+ */
+goog.node.arrayCommandLineFlag = function(name, type, 
+                                          defaultValue, description) {
+  goog.base(this, name, type, defaultValue, description);
+
+  /**
+   * The value set from the command line of this flag.
+   * @type {Array.<Object>|undefined}
+   * @override
+   */
+  this.value = [];                              
+}
+goog.inherits(goog.node.arrayCommandLineFlag,
+              goog.node.commandLineFlag);
+
+/**
+ * Sets the current value for this flag.
+ * @return {*} The value of the flag.
+ */
+goog.node.arrayCommandLineFlag.prototype.parseValue = function(value) {
+  if (value.search(',') != -1) {
+    Array.prototype.push.apply(this.value, value.split(','));
+  } else {
+    this.value.push(value);
+  }
+};
 
 /**
  * Object for declaring and retrieving flag values.
@@ -124,6 +169,24 @@ goog.node.FLAGS.define_string = function(name, defaultValue, description) {
   goog.node.FLAGS.definedFlags_[name] = newFlag;
   goog.node.FLAGS.__defineGetter__(name, function() {
     return String(newFlag.getValue());
+  });
+};
+
+
+/**
+ * Defines a new string flag
+ * @param {string} name The name of this flag.
+ * @param {string|undefined} defaultValue The default value to return if the
+ *     flag has not yet been set.
+ * @param {string} description The description of this flag.
+ */
+goog.node.FLAGS.define_string_array = function(name, defaultValue, 
+                                               description) {
+  var newFlag = new goog.node.arrayCommandLineFlag(name, 
+      goog.node.flagType.STRING_ARRAY, defaultValue, description);
+  goog.node.FLAGS.definedFlags_[name] = newFlag;
+  goog.node.FLAGS.__defineGetter__(name, function() {
+    return newFlag.getValue().map(String);
   });
 };
 
@@ -162,23 +225,39 @@ goog.node.FLAGS.parseArgs = function() {
         goog.node.FLAGS.printHelp();
         process.exit(0);
     }
-    var splitParam = value.split('=', 2);
+    var splitParam = value.split('=');
     var flag, flagValue;
-    if (splitParam.length > 1) {
+    var valueIsFlag = value.slice(0, 2) == '--';
+    if (valueIsFlag && splitParam.length > 1) {
       flag = splitParam[0];
-      flagValue = splitParam[1];
+      flagValue = splitParam.slice(1).join('=');
     } else {
       if (lastParam) {
-        flag = lastParam;
-        flagValue = value;
+        if (lastParam.slice(0, 2) == '--' && valueIsFlag) {
+          var boolFlag = goog.node.FLAGS.parseBoolean_(lastParam);
+          flag = boolFlag.flag;
+          flagValue = boolFlag.flagValue;
+          lastParam = value;
+        } else {
+          flag = lastParam;
+          flagValue = value;
+        }
       } else {
         lastParam = value;
       }
     }
+    // If this is the last parameter being parsed, and we haven't set a flag,
+    // attempt to parse the last parameter as a boolean flag.
+    if (index == array.length - 1 && lastParam && !flag) {
+      var boolFlag = goog.node.FLAGS.parseBoolean_(lastParam);
+      flag = boolFlag.flag;
+      flagValue = boolFlag.flagValue;   
+    }
     if (flag && flagValue) {
       flag = flag.slice(2);
       if (flag in goog.node.FLAGS.definedFlags_) {
-        goog.node.FLAGS.definedFlags_[flag].value = flagValue;
+        goog.node.FLAGS.definedFlags_[flag].parseValue(flagValue);
+        lastParam = null;
       } else {
         console.error('Unknown flag ' + flag);
         goog.node.FLAGS.printHelp();
@@ -195,6 +274,26 @@ goog.node.FLAGS.parseArgs = function() {
     }
   }
 };
+
+
+/**
+ * Parses a boolean flag.
+ * @param {string} value The content of the flag.
+ * @return {{flag:string,flagValue:string}} The flag name and the flag value.
+ * @private
+ */
+goog.node.FLAGS.parseBoolean_ = function(value) {
+  var flag = value.slice(2);
+  var flagValue = 'true';
+  if (flag.slice(0, 2) == 'no') {
+    flag = flag.slice(2);
+    flagValue = 'false';
+  }
+  return {
+    flag: '--' + flag,
+    flagValue: flagValue
+  };
+}
 
 
 /**
