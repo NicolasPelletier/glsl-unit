@@ -131,6 +131,18 @@ glslunit.compiler.ShaderProgram = function() {
   this.vertexAst = {};
 
   /**
+   * The original, unoptimized vertex source code.
+   * @type {string}
+   */
+  this.originalVertexSource = '';
+
+  /**
+   * The original, unoptimized fragment source code.
+   * @type {string}
+   */
+  this.originalFragmentSource = '';
+
+  /**
    * When accessing fragmentSource/vertexSource, if prettyPrint is true
    * the source will be pretty printed.
    * @type {boolean}
@@ -206,6 +218,31 @@ glslunit.compiler.ShaderProgram.prototype.getFragmentSource = function(
   return glslunit.Generator.getSourceCode(this.fragmentAst,
       opt_newline || '\\n', this.prettyPrint);
 };
+
+
+/**
+ * Gets the original, unoptimized fragment source code.
+ * @param {string=} opt_newline The string to use for line breaks.
+ * @return {string} The vertex source code.
+ * @export
+ */
+glslunit.compiler.ShaderProgram.prototype.getOriginalFragmentSource = function(
+    opt_newline) {
+  return this.originalFragmentSource.replace('\n', opt_newline || '\\n');
+};
+
+
+/**
+ * Gets the original, unoptimized fragment source code.
+ * @param {string=} opt_newline The string to use for line breaks.
+ * @return {string} The vertex source code.
+ * @export
+ */
+glslunit.compiler.ShaderProgram.prototype.getOriginalVertexSource = function(
+    opt_newline) {
+  return this.originalVertexSource.replace('\n', opt_newline || '\\n');
+};
+
 
 
 /**
