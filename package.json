@@ -1,6 +1,6 @@
 {
   "name": "glsl-unit",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Unit testing framework for GLSL and minifying compiler",
   "homepage": "http://glslunit.appspot.com",
   "author": {
