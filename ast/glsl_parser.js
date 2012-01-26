@@ -6704,49 +6704,56 @@ glslunit.glsl.parser = (function(){
           return cachedResult.result;
         }
         
-        var result0, result1, result2, result3;
+        var result0, result1, result2, result3, result4;
         var pos0, pos1;
         
         pos0 = pos;
         pos1 = pos;
         result0 = parse_postfix_expression();
         if (result0 !== null) {
-          if (input.substr(pos, 2) === "++") {
-            result1 = "++";
-            pos += 2;
-          } else {
-            result1 = null;
-            if (reportFailures === 0) {
-              matchFailed("\"++\"");
-            }
-          }
-          if (result1 === null) {
-            if (input.substr(pos, 2) === "--") {
-              result1 = "--";
-              pos += 2;
-            } else {
-              result1 = null;
-              if (reportFailures === 0) {
-                matchFailed("\"--\"");
-              }
-            }
-          }
+          result1 = parse__();
           result1 = result1 !== null ? result1 : "";
           if (result1 !== null) {
-            result2 = [];
-            result3 = parse_field_selector();
-            if (result3 === null) {
-              result3 = parse_index_accessor();
-            }
-            while (result3 !== null) {
-              result2.push(result3);
-              result3 = parse_field_selector();
-              if (result3 === null) {
-                result3 = parse_index_accessor();
+            if (input.substr(pos, 2) === "++") {
+              result2 = "++";
+              pos += 2;
+            } else {
+              result2 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"++\"");
               }
             }
+            if (result2 === null) {
+              if (input.substr(pos, 2) === "--") {
+                result2 = "--";
+                pos += 2;
+              } else {
+                result2 = null;
+                if (reportFailures === 0) {
+                  matchFailed("\"--\"");
+                }
+              }
+            }
+            result2 = result2 !== null ? result2 : "";
             if (result2 !== null) {
-              result0 = [result0, result1, result2];
+              result3 = [];
+              result4 = parse_field_selector();
+              if (result4 === null) {
+                result4 = parse_index_accessor();
+              }
+              while (result4 !== null) {
+                result3.push(result4);
+                result4 = parse_field_selector();
+                if (result4 === null) {
+                  result4 = parse_index_accessor();
+                }
+              }
+              if (result3 !== null) {
+                result0 = [result0, result1, result2, result3];
+              } else {
+                result0 = null;
+                pos = pos1;
+              }
             } else {
               result0 = null;
               pos = pos1;
@@ -6781,7 +6788,7 @@ glslunit.glsl.parser = (function(){
                 })
               }
               return result;
-            })(result0[0], result0[1], result0[2]);
+            })(result0[0], result0[2], result0[3]);
         }
         if (result0 === null) {
           pos = pos0;
