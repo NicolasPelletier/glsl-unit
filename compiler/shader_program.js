@@ -234,7 +234,7 @@ glslunit.compiler.ShaderProgram.prototype.getFragmentSource = function(
  */
 glslunit.compiler.ShaderProgram.prototype.getOriginalFragmentSource = function(
     opt_newline) {
-  return this.originalFragmentSource.replace('\n', opt_newline || '\\n');
+  return this.originalFragmentSource.replace(/\n/g, opt_newline || '\\n');
 };
 
 
@@ -246,7 +246,7 @@ glslunit.compiler.ShaderProgram.prototype.getOriginalFragmentSource = function(
  */
 glslunit.compiler.ShaderProgram.prototype.getOriginalVertexSource = function(
     opt_newline) {
-  return this.originalVertexSource.replace('\n', opt_newline || '\\n');
+  return this.originalVertexSource.replace(/\n/g, opt_newline || '\\n');
 };
 
 
