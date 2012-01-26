@@ -107,6 +107,12 @@ glslunit.compiler.ShaderProgram = function() {
   this.className = '';
 
   /**
+   * The file name for the template to be used when generating source code.
+   * @type {string}
+   */
+  this.template = '';
+
+  /**
    * The name of the superclass of the Javascript class to be be generated.
    * @type {string}
    */
@@ -233,7 +239,7 @@ glslunit.compiler.ShaderProgram.prototype.getOriginalFragmentSource = function(
 
 
 /**
- * Gets the original, unoptimized fragment source code.
+ * Gets the original, unoptimized vertex source code.
  * @param {string=} opt_newline The string to use for line breaks.
  * @return {string} The vertex source code.
  * @export
@@ -256,6 +262,7 @@ glslunit.compiler.ShaderProgram.prototype.getAttributes = function() {
   for (var i in this.attributeMap) {
     result.push(this.attributeMap[i]);
   }
+  result[result.length - 1]['last'] = true;
   return result;
 };
 
@@ -271,6 +278,7 @@ glslunit.compiler.ShaderProgram.prototype.getUniforms = function() {
   for (var i in this.uniformMap) {
     result.push(this.uniformMap[i]);
   }
+  result[result.length - 1]['last'] = true;
   return result;
 };
 

@@ -89,6 +89,15 @@ glslunit.compiler.RE_INCLUDE_ = /\/\/!\s*INCLUDE\s+(.*)/;
 
 
 /**
+ * Regular expression for specifying which template to use for this file.
+ * @type {RegExp}
+ * @const
+ * @private
+ */
+glslunit.compiler.RE_TEMPLATE_ = /\/\/!\s*TEMPLATE\s+(.*)/;
+
+
+/**
  * Regular expression for including libraries.
  * @type {RegExp}
  * @const
@@ -288,6 +297,9 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
     if (inVertex) {
       result.originalVertexSource += line + '\n';
       vertexSourceMap.push({fileName: fileName, localLine: index});
+    }
+    if (match = glslunit.compiler.RE_TEMPLATE_.exec(line)) {
+      result.template = match[1];
     }
     // Add in include code after appending comment to source code to keep things
     // in the correct order.

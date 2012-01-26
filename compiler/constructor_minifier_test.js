@@ -21,7 +21,10 @@ function setUp() {
       'ivec3 baz = ivec3(1., 1, 1);' +
       'mat2 m2 = mat2(vec3(1),1);' +
       'mat2 m2a = mat2(1,1,1,1);' +
-      'mat2 m2b = mat2(41.,0,0,41.);';
+      'mat2 m2b = mat2(41,0,0,41.0);' +
+      'mat2 m2c = mat2(41,vec2(0),41.0);' +
+      'mat2 m2d = mat2(41,vec2(0,0),41.0);' +
+      'mat2 m2e = mat2(41,vec2(1,0),41.0);';
 }
 
 
@@ -34,7 +37,10 @@ function testConstructorMinifier() {
       'ivec3 baz=ivec3(1);' +
       'mat2 m2=mat2(vec3(1),1);' +
       'mat2 m2a=mat2(1,1,1,1);' +
-      'mat2 m2b=mat2(41);';
+      'mat2 m2b=mat2(41);' +
+      'mat2 m2c=mat2(41,vec2(0),41);' +
+      'mat2 m2d=mat2(41);' +
+      'mat2 m2e=mat2(41,1,0,41);';
   var minifier = new glslunit.compiler.ConstructorMinifier();
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);

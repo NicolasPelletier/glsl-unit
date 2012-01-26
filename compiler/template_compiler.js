@@ -31,6 +31,9 @@ goog.node.FLAGS.define_string('template', '',
 goog.node.FLAGS.define_string('glsl_include_prefix', '',
     'Compiler will try prefixing this flag to the path of glsllib files. If ' +
     'not found there use ones in current directory.');
+goog.node.FLAGS.define_string_array('template_include_prefix', [],
+    'Compiler will try prefixing this flag to the path of template files. If ' +
+    'not found there use ones in current directory.');
 
 goog.node.FLAGS.define_bool('remove_dead_functions', true,
     'Compiler will remove any functions it determines to be dead.');
@@ -58,7 +61,7 @@ goog.node.FLAGS.define_bool('minify_constructors', true,
 goog.node.FLAGS.define_bool('pretty_print', false,
     'Output pretty-printed GLSL source code.');
 
-goog.node.FLAGS.define_string_array('tempalte_property', [],
+goog.node.FLAGS.define_string_array('template_property', [],
     'Properties to be passed down to template for rendering.');
 
 goog.node.FLAGS.parseArgs();
@@ -75,27 +78,51 @@ var GLSL_EXTENSIONS = {
 };
 
 
-function main() {
-  var inputDirectories = [path.dirname(goog.node.FLAGS['input'])];
-  var inputFiles = {};
-  if (goog.node.FLAGS.glsl_include_prefix) {
-    inputDirectories.push(path.join(path.dirname(goog.node.FLAGS.input),
-                                    goog.node.FLAGS.glsl_include_prefix));
-  }
-  inputDirectories.forEach(function(inputDir) {
-    var glslFiles = fs.readdirSync(inputDir).filter(function(x) {
-        return path.extname(x) in GLSL_EXTENSIONS;
+/**
+ * Loads all of the files under inputDir and any subdirectories contained in
+ * prefixes.
+ * @param {string} inputDir The directory of the input file.
+ * @param {Array.<string>} prefixes The prefixes of other directories to load
+ *      files from.
+ * @param {function(string):boolean=} filterFunction to filter files to load.
+ * @return {!Object.<string, string>} Map of filenames to their contents.
+ */
+function loadFiles(inputDir, prefixes, filterFunction) {
+  var directories = [inputDir];
+  filterFunction = filterFunction || function(x) {return true;};
+  if (prefixes) {
+    prefixes.forEach(function(prefix) {
+      directories.push(path.join(inputDir, prefix));
     });
-    glslFiles.forEach(function(fileName) {
-      inputFiles[fileName] = fs.readFileSync(path.join(inputDir, fileName),
-                                             'utf8');
+  }
+  var result = {};
+  directories.forEach(function(dir) {
+    var files = fs.readdirSync(dir).filter(function(fileOrDir) {
+          return !fs.statSync(path.join(dir, fileOrDir)).isDirectory() &&
+              filterFunction(fileOrDir);
+        });
+    files.forEach(function(fileName) {
+      result[fileName] = fs.readFileSync(path.join(dir, fileName), 'utf8');
     });
   });
+  return result;
+}
+
+
+function main() {
+  var inputDir = path.dirname(goog.node.FLAGS.input);
+  var shaderDirectories = [inputDir];
+  var shaderFiles = loadFiles(inputDir, goog.node.FLAGS.glsl_include_prefix,
+      function(x) {
+    return path.extname(x) in GLSL_EXTENSIONS;
+  });
+  var templateFiles = loadFiles(inputDir,
+                                goog.node.FLAGS.template_include_prefix);
   var start = new Date().getTime();
   try {
     var shaderProgram = glslunit.compiler.Preprocessor.ParseFile(
-      path.basename(goog.node.FLAGS.input),
-      inputFiles);
+        path.basename(goog.node.FLAGS.input),
+        shaderFiles);
   } catch (e) {
     console.error(e.message);
     process.exit(1);
@@ -144,7 +171,7 @@ function main() {
   finish = new Date().getTime();
 
   var templateProperties = {};
-  goog.node.FLAGS.tempalte_property.forEach(function(property) {
+  goog.node.FLAGS.template_property.forEach(function(property) {
     var keyVal = property.split('=', 2);
     if (keyVal.length != 2) {
       console.error('Invalid template property: ' + property);
@@ -153,9 +180,21 @@ function main() {
     templateProperties[keyVal[0]] = keyVal[1];
   });
   shaderProgram.templateProperties = templateProperties;
-  
+
   var output = '';
-  if (goog.node.FLAGS.template) {
+  if (shaderProgram.template || goog.node.FLAGS.template) {
+    var template_source = '';
+    if (shaderProgram.template) {
+      template_source = templateFiles[shaderProgram.template];
+      if (!template_source) {
+        console.error('Could not find template ' + shaderProgram.template);
+        process.exit(1);
+      }
+    } else {
+      template_source = fs.readFileSync(goog.node.FLAGS.template, 'utf8');
+    }
+    shaderProgram.defaultUniformsAndAttributes();
+    output = Mustache.to_html(template_source, shaderProgram) + '\n';
     var template = false;
     var template_source = fs.readFileSync(goog.node.FLAGS.template, 'utf8');
     shaderProgram.defaultUniformsAndAttributes();

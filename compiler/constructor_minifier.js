@@ -38,17 +38,18 @@ goog.inherits(glslunit.compiler.ConstructorMinifier,
 
 
 /**
- * Set of built in conversion and constructor functions in GLSL.
+ * Map of built in conversion and constructor functions in GLSL to the number
+ * of arguments they take.
  * @const
- * @type {!Object.<string, boolean>}
+ * @type {!Object.<string, number>}
  * @private
  */
 glslunit.compiler.ConstructorMinifier.CONVERSION_FUNCTIONS_ = {
-  'vec2': true, 'vec3': true, 'vec4': true,
-  'bvec2': true, 'bvec3': true, 'bvec4': true,
-  'ivec2': true, 'ivec3': true, 'ivec4': true,
-  'mat2': true, 'mat3': true, 'mat4': true,
-  'float': true, 'int': true, 'bool': true
+  'vec2': 2, 'vec3': 3, 'vec4': 4,
+  'bvec2': 2, 'bvec3': 3, 'bvec4': 4,
+  'ivec2': 2, 'ivec3': 3, 'ivec4': 4,
+  'mat2': 4, 'mat3': 9, 'mat4': 16,
+  'float': 1, 'int': 1, 'bool': 1
 };
 
 
@@ -67,6 +68,19 @@ glslunit.compiler.ConstructorMinifier.prototype.getAfterTransformFunction =
 
 
 /**
+ * Determines whether or not the current parent node is a conversion function.
+ * @return {boolean} Whether or not the parent node is a conversion function.
+ * @private
+ */
+glslunit.compiler.ConstructorMinifier.prototype.parentIsConstructor_ =
+    function() {
+  var parentNode = this.nodeStack_.slice(-2)[0];
+  return parentNode.type == 'function_call' &&
+      parentNode.function_name in
+          glslunit.compiler.ConstructorMinifier.CONVERSION_FUNCTIONS_;
+}
+
+/**
  * If able to, converts a node to an integer.
  * @param {!Object} node The node to transform.
  * @return {!Object} The transformed node.
@@ -76,13 +90,10 @@ glslunit.compiler.ConstructorMinifier.prototype.maybeConvertToInt_ =
     function(node) {
   // We slice off at -2 because the node itself will also be on the stack, and
   // we want it's parent.
-  var parentNode = this.nodeStack_.slice(-2)[0];
-  if (parentNode.type == 'function_call' &&
-      Math.abs(node.value) < 1 << 16 && // The WebGL Spec only requires 17 bits
+  if (this.parentIsConstructor_() &&
+      Math.abs(node.value) < 1 << 16) { // The WebGL Spec only requires 17 bits
                                       // per integer, so we need this to prevent
                                       // overflow.
-      parentNode.function_name in
-          glslunit.compiler.ConstructorMinifier.CONVERSION_FUNCTIONS_) {
     if (node.value == Math.round(node.value)) {
       var result = glslunit.ASTTransformer.cloneNode(node);
       result.type = 'int';
@@ -119,47 +130,62 @@ glslunit.compiler.ConstructorMinifier.prototype.transformBool =
 
 
 /**
- * If a conversion function call has all of its parameters with the same value,
+ * If a vec* constructor call has all of its parameters with the same value,
  * we only need to specify the value once.  For example, vec4(1, 1, 1, 1) will
- * become vec4(1)
+ * become vec4(1).  If a mat* constructor call is a diagonal matrix, then we
+ * only need the diagonal value.  For example. mat2(5, 0, 0, 5) will become
+ * mat2(5).
  * @param {!Object} node The node to transform.
  * @return {!Object} The transformed node.
  * @export
  */
 glslunit.compiler.ConstructorMinifier.prototype.transformFunctionCall =
     function(node) {
-  if (node.function_name in
-          glslunit.compiler.ConstructorMinifier.CONVERSION_FUNCTIONS_ &&
-      node.parameters && node.parameters.length > 1) {
-    var firstParam = glslunit.Generator.getSourceCode(node.parameters[0]);
-    var minifyDeclaration = false;
-    if (node.function_name.slice(0, 3) != 'mat') {
-      var allEqual = goog.array.every(node.parameters, function(parameter) {
-        return glslunit.Generator.getSourceCode(parameter) == firstParam;
-      });
-      if (allEqual) {
-        minifyDeclaration = true;
+  var expectedArgumentCount =
+      glslunit.compiler.ConstructorMinifier.CONVERSION_FUNCTIONS_[
+          node.function_name];
+  if (expectedArgumentCount) {
+    // If the parent of a constructor function is a constructor function, we
+    // don't need to do the conversion before passing the parmeter to the
+    // parent, the parent constructor will do that for us.
+    // e.g. mat2(vec2(x, y), vec2(z, a)) == mat2(x,y,z,a);
+    if (this.parentIsConstructor_()) {
+      if (node.parameters.length == expectedArgumentCount) {
+        return node.parameters;
       }
-    } else {
-      var dimensions = parseInt(node.function_name.slice(-1), 10);
-      if (node.parameters.length == dimensions * dimensions) {
-        var isIdent = true;
-        for (var i = 0; i < dimensions; i++) {
-          for (var j = 0; j < dimensions; j++) {
-            var cell = glslunit.Generator.getSourceCode(
-                node.parameters[i * dimensions + j]);
-            isIdent = isIdent && cell == (i == j ? firstParam : '0');
+    }
+    if (node.parameters && node.parameters.length > 1) {
+      var firstParam = glslunit.Generator.getSourceCode(node.parameters[0]);
+      var minifyDeclaration = false;
+      if (node.function_name.slice(0, 3) == 'mat') {
+        // Check to see if the the matrix is a multiple of the identity matrix.
+        if (node.parameters.length == expectedArgumentCount) {
+          var isIdent = true;
+          var dimensions = parseInt(node.function_name.slice(-1), 10);
+          for (var i = 0; i < dimensions && isIdent; i++) {
+            for (var j = 0; j < dimensions && isIdent; j++) {
+              var cell = glslunit.Generator.getSourceCode(
+                  node.parameters[i * dimensions + j]);
+              isIdent = cell == (i == j ? firstParam : '0');
+            }
+          }
+          if (isIdent) {
+            minifyDeclaration = true;
           }
         }
-        if (isIdent) {
+      } else {
+        var allEqual = goog.array.every(node.parameters, function(parameter) {
+          return glslunit.Generator.getSourceCode(parameter) == firstParam;
+        });
+        if (allEqual) {
           minifyDeclaration = true;
         }
       }
-    }
-    if (minifyDeclaration) {
-      var result = glslunit.ASTTransformer.cloneNode(node);
-      result.parameters = [node.parameters[0]];
-      return result;
+      if (minifyDeclaration) {
+        var result = glslunit.ASTTransformer.cloneNode(node);
+        result.parameters = [node.parameters[0]];
+        return result;
+      }
     }
   }
   return node;

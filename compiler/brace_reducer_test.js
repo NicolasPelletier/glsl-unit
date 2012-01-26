@@ -48,7 +48,7 @@ function testConstructorMinifier() {
       'i++;j++;}else ' +
       'return;' +
       'do k++;while(false)' +
-      '}'
+      '}';
   var minifier = new glslunit.compiler.BraceReducer();
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);

@@ -1,7 +1,7 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 
 /**
- * @fileoverview Optimizer that removes unnecessary braces around
+ * @fileoverview Optimizer that removes unnecessary braces around.
  * @author rowillia@google.com (Roy Williams)
  */
 goog.provide('glslunit.compiler.BraceReducer');
@@ -50,7 +50,6 @@ glslunit.compiler.BraceReducer.maybeConvertScopeToStatement_ =
 };
 
 
-
 /**
  * Removes any unnecessary braces from an if statement or its else body.
  * @param {!Object} node The node to transform.
@@ -62,7 +61,7 @@ glslunit.compiler.BraceReducer.prototype.transformIfStatement = function(node) {
       node, 'body');
   return glslunit.compiler.BraceReducer.maybeConvertScopeToStatement_(
       result, 'elseBody');
-}
+};
 
 
 /**
@@ -75,7 +74,7 @@ glslunit.compiler.BraceReducer.prototype.transformWhileStatement =
     function(node) {
   return glslunit.compiler.BraceReducer.maybeConvertScopeToStatement_(
       node, 'body');
-}
+};
 
 
 /**
@@ -88,7 +87,7 @@ glslunit.compiler.BraceReducer.prototype.transformDoStatement =
     function(node) {
   return glslunit.compiler.BraceReducer.maybeConvertScopeToStatement_(
       node, 'body');
-}
+};
 
 
 /**
@@ -101,7 +100,7 @@ glslunit.compiler.BraceReducer.prototype.transformForStatement =
     function(node) {
   return glslunit.compiler.BraceReducer.maybeConvertScopeToStatement_(
       node, 'body');
-}
+};
 
 
 /**

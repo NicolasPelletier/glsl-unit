@@ -35,6 +35,8 @@ process.stdout = function() {};
  */
 process.stdout.write = function(arg) {};
 
+process.stdout.flush = function() {};
+
 /**
  * @return {Object}
  */
@@ -91,6 +93,17 @@ nodeObject.prototype.extname = function(arg) {};
  * @return {string}
  */
 nodeObject.prototype.readFileSync = function(arg) {};
+
+/**
+ * @param {string} arg
+ * @return {nodeObject}
+ */
+nodeObject.prototype.statSync = function(arg) {};
+
+/**
+ * @return {boolean}
+ */
+nodeObject.prototype.isDirectory = function() {};
 
 /**
  * @param {string} arg

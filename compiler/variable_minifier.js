@@ -7,13 +7,14 @@
 goog.provide('glslunit.compiler.VariableMinifier');
 
 goog.require('glslunit.ASTTransformer');
+goog.require('glslunit.NodeCollector');
 goog.require('glslunit.VariableScopeVisitor');
 goog.require('glslunit.compiler.CompilerStep');
 goog.require('glslunit.compiler.NameGenerator');
 goog.require('glslunit.compiler.ShaderAttributeEntry');
 goog.require('glslunit.compiler.ShaderProgram');
 goog.require('glslunit.compiler.ShaderUniformEntry');
-goog.require('glslunit.NodeCollector');
+goog.require('glslunit.compiler.Utils');
 goog.require('goog.object');
 
 
@@ -79,6 +80,8 @@ goog.inherits(glslunit.compiler.VariableMinifier, glslunit.ASTTransformer);
  * renamed.
  * @param {Object} declaratorNode The shader program
  *     being optimized.
+ * @return {boolean} True if the node should be renamed, false otherwise.
+ * @private
  */
 glslunit.compiler.VariableMinifier.prototype.shouldRenameNode_ =
     function(declaratorNode) {
@@ -113,14 +116,8 @@ glslunit.compiler.VariableMinifier.prototype.setShaderProgram =
  */
 glslunit.compiler.VariableMinifier.prototype.beforeTransformRoot =
     function(node) {
-  var structNodes = glslunit.NodeCollector.collectNodes(node,
-      function(x, stack) {
-    return (x.type == 'declarator' &&
-            stack.slice(-1)[0].type == 'struct_definition');
-  });
-  goog.array.forEach(structNodes, function(structDeclarator) {
-    this.structDeclaratorNodes_[structDeclarator.id] = true;
-  }, this);
+  this.structDeclaratorNodes_ =
+      glslunit.compiler.Utils.getStructDeclarations(node);
   // We want to export the renaming of varyings and uniforms to the fragment
   // shader so the renaming is uniform across the two.  Therefore, we keep track
   // of two levels of globals, the ones that are to be exported, or the root

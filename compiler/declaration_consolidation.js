@@ -13,6 +13,7 @@ goog.require('glslunit.NodeCollector');
 goog.require('glslunit.VariableScopeVisitor');
 goog.require('glslunit.compiler.CompilerStep');
 goog.require('glslunit.compiler.ShaderProgram');
+goog.require('glslunit.compiler.Utils');
 goog.require('goog.array');
 
 
@@ -96,14 +97,9 @@ glslunit.compiler.DeclarationConsolidation.prototype.beforeTransformRoot =
   goog.array.forEach(forNodes, function(forNode) {
     this.forInitializerNodes_[forNode.initializer.id] = true;
   }, this);
-  var structNodes = glslunit.NodeCollector.collectNodes(node, 
-      function(x, stack) {
-    return (x.type == 'declarator' &&
-            stack.slice(-1)[0].type == 'struct_definition');
-  });
-  goog.array.forEach(structNodes, function(structDeclarator) {
-    this.structDeclaratorNodes_[structDeclarator.id] = true;
-  }, this);
+
+  this.structDeclaratorNodes_ =
+    glslunit.compiler.Utils.getStructDeclarations(node);
 
   // Second, gather all declarations and organize them by scope and type.
   var scopeDeclarations =
