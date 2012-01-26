@@ -331,7 +331,7 @@ iteration_statement
   / for_loop
 
 jump_statement
-  = "return" expression:expression semicolon {
+  = "return" _? expression:expression semicolon {
       return new node({
         type: "return",
         value: expression
