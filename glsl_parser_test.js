@@ -164,6 +164,9 @@ function testPostfix() {
   roundTripTest('x.xyz', 'condition');
   roundTripTest('x[1].xyz[1]', 'condition');
   roundTripTest('x++', 'condition');
+  assertEquals('x++',
+    glslunit.Generator.getSourceCode(parser.parse('x ++',
+                                                  'condition')));
   roundTripTest('x--', 'condition');
   roundTripTest('x[1].xyz[1]++', 'condition');
   roundTripTest('x[1]++.rgba', 'condition');

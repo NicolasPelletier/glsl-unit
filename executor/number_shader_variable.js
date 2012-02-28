@@ -26,8 +26,8 @@ goog.require('glslunit.ShaderVariable');
 goog.require('goog.array');
 
 /**
- * @typedef {function (new:TypedArray,
- *     (Array|ArrayBuffer|TypedArray|null|number), (number)=, (number)=)}
+ * @typedef {function (new:ArrayBufferView,
+ *     (Array|ArrayBuffer|ArrayBufferView|null|number), (number)=, (number)=)}
  */
 glslunit.TypedArrayConstructor;
 
@@ -202,7 +202,7 @@ glslunit.NumberShaderVariable.prototype.bufferData = function(
  * @param {!WebGLRenderingContext} context The WebGL context.
  * @param {!WebGLProgram} program The compiled and linked shader program.
  * @param {number} valueSize The number of components per vertex attribute.
- * @param {TypedArray} valuesTypedArray A TypedArray of the values.
+ * @param {ArrayBufferView} valuesTypedArray A TypedArray of the values.
  *     to buffer to the graphics card.
  */
 glslunit.NumberShaderVariable.prototype.bufferAttribute = function(

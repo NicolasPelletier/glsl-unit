@@ -23,9 +23,7 @@ goog.require('{{.}}');
  */
 {{namespace}}.{{className}}.JS_CONST =
 {{#jsConsts}}
-  '#define {{value}} \' +\n' +
-        ({{expression}}) + '\n' +
-  '      \'\\n' +
+  '#define {{value}} ' + ({{expression}}) + '\n' +
 {{/jsConsts}}
   '';
 
@@ -47,9 +45,10 @@ goog.require('{{.}}');
 
 /**
  * Map of uniform original name to its minified name.
- * @constructor
+ * @type {Object.<string, string>}
+ * @const
  */
-{{namespace}}.{{className}}.uniform = {};
+{{namespace}}.{{className}}.uniform = function() {};
 {{#getUniforms}}
 
 /**
@@ -63,9 +62,10 @@ goog.require('{{.}}');
 
 /**
  * Map of attribute original name to its minified name.
- * @constructor
+ * @type {Object.<string, string>}
+ * @const
  */
-{{namespace}}.{{className}}.attribute = {};
+{{namespace}}.{{className}}.attribute = function() {};
 {{#getAttributes}}
 
 /**

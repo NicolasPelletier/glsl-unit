@@ -12,7 +12,7 @@ goog.require('goog.testing.jsunit');
 
 function testNameGenerator() {
   assertEquals('a', glslunit.compiler.NameGenerator.getShortName(0));
-  assertEquals('_a_', glslunit.compiler.NameGenerator.getShortDef(0));
+  assertEquals('_a', glslunit.compiler.NameGenerator.getShortDef(0));
   assertEquals('b', glslunit.compiler.NameGenerator.getShortName(1));
   assertEquals('Z', glslunit.compiler.NameGenerator.getShortName(51));
   assertEquals('ba', glslunit.compiler.NameGenerator.getShortName(53));

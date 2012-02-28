@@ -35,6 +35,20 @@ glslunit.compiler.NameGenerator = function() {
    * @type {number}
    */
   this.nextNameIndex = 0;
+
+  /**
+   * The index of the next free definition name.  We need a separate sequence
+   * for definitions because any combination of letters from
+   * [rbga],[xyzw],[stpq] are all valid variable names, but should NOT be used
+   * as macro names since . is defined as a delimieter in the preprocessing
+   * language.  Therefore, the following would be invalid code:
+   *
+   * #define a 10.0
+   * someVariable = someInput.a // WebGL Preprocessor would inline 'a',
+   *                            // resulting in invalid code.
+   * @type {number}
+   */
+  this.nextDefinitionIndex = 0;
 };
 
 
@@ -87,7 +101,7 @@ glslunit.compiler.NameGenerator.getShortName = function(index) {
  * @return {string} The short name at the index.
  */
 glslunit.compiler.NameGenerator.getShortDef = function(index) {
-  return '_' + glslunit.compiler.NameGenerator.getShortName(index) + '_';
+  return '_' + glslunit.compiler.NameGenerator.getShortName(index);
 };
 
 
@@ -108,6 +122,16 @@ glslunit.compiler.NameGenerator.prototype.shortenSymbol = function(name) {
   this.usedKeys_[nextName] = true;
   this.renameMap_[name] = nextName;
   return nextName;
+};
+
+
+/**
+ * Gets the next available short definition.
+ * @return {string} The next available short definition.
+ */
+glslunit.compiler.NameGenerator.prototype.getNextShortDefinition = function() {
+  return glslunit.compiler.NameGenerator.getShortDef(
+      this.nextDefinitionIndex++);
 };
 
 
@@ -139,5 +163,6 @@ glslunit.compiler.NameGenerator.prototype.clone = function() {
   result.renameMap_ = goog.object.clone(this.renameMap_);
   result.usedKeys_ = goog.object.clone(this.usedKeys_);
   result.nextNameIndex = this.nextNameIndex;
+  result.nextDefinitionIndex = this.nextDefinitionIndex;
   return result;
 };

@@ -39,7 +39,7 @@ glslunit.NodeCollector = function(filterFunction) {
    */
   this.collectedNodes_ = [];
 
-    /**
+  /**
    * The stack of parent nodes.
    * @type {!Array.<!Object>}
    * @private

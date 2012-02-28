@@ -13,11 +13,12 @@
 // limitations under the License.
 
 /**
- * @fileoverview Utility functions for glslunit
+ * @fileoverview Utility functions for glslunit.
  * @author rowillia@google.com (Roy Williams)
  */
 
 goog.provide('glslunit.utils');
+goog.require('glslunit.glsl.parser');
 
 
 /**
@@ -40,11 +41,22 @@ glslunit.utils.getFunctionSuffix = function(typeName) {
  * @return {string} The suffix for method calls on this type.
  */
 glslunit.utils.toTitleOrCamelCase = function(input, initialUpper) {
-  var result = input.split("_").map(function(x) {
+  var result = input.split('_').map(function(x) {
     return x.slice(0, 1).toUpperCase() + x.slice(1).toLowerCase();
-  }).join("");
+  }).join('');
   if (!initialUpper) {
     result = result.slice(0, 1).toLowerCase() + result.slice(1);
   }
   return result;
 };
+
+/**
+ * Array of AST nodes for all readable built in globals.
+ * @type {!Array.<!Object>}
+ */
+glslunit.utils.BUILT_IN_GLOBALS =
+  ['varying mediump vec4 gl_FragCoord;',
+   'varying bool gl_FrontFacing;',
+   'varying mediump vec2 gl_PointCoord;'].map(function(x) {
+      return glslunit.glsl.parser.parse(x, 'global_declaration');
+   });

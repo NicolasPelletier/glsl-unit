@@ -25,7 +25,8 @@
 goog.provide('glslunit.testing.TestCase');
 
 goog.require('glslunit.FragmentExecutor');
-goog.require('glslunit.NumberShaderVariable');
+goog.require('glslunit.Generator');
+goog.require('glslunit.NodeCollector');
 goog.require('glslunit.ShaderVariable');
 goog.require('glslunit.SpliceTransformer');
 goog.require('glslunit.VariableScopeVisitor');
@@ -135,6 +136,55 @@ glslunit.testing.TestCase = function(context, viewportHeight, viewportWidth,
    * @private
    */
   this.testPassed_ = false;
+
+  /**
+   * List of warnings during execution of the test case.
+   * @type {!Array.<string>}
+   * @private
+   */
+   this.testWarnings_ = [];
+
+   /**
+    * Map of a global variable name to it's declarator node.
+    * @type {!Object.<string, Object>}
+    * @private
+    */
+   this.globalVariableNames_ = {};
+
+   // Get a list of globals accessed by the shader.
+   // First, get a list of all global attributes and uniforms.
+   var globalVariables =
+     glslunit.VariableScopeVisitor.getVariablesInScope(this.sourceAst_,
+                                                       this.sourceAst_,
+                                                       true);
+
+   // Now collect the built in properties.  We only do this if the test case is
+   // a fragment test case, since only fragment test cases can read from the
+   // built in values.
+   if (this.testType_ == glslunit.testing.TestCase.TestType.FRAGMENT) {
+     var builtInNames = {};
+     goog.array.forEach(glslunit.utils.BUILT_IN_GLOBALS,
+         function(x) {
+       return builtInNames[x.declarators[0].name.name] = x;
+     });
+     var builtInRefs =
+         glslunit.NodeCollector.collectNodes(this.sourceAst_, function(x) {
+       return x.type == 'identifier' && x.name in builtInNames;
+     });
+     goog.array.forEach(builtInRefs, function(x) {
+       globalVariables[x.name] = builtInNames[x.name];
+     });
+   }
+   for (var i in globalVariables) {
+     var global = globalVariables[i];
+     // 'const' is the only qualifier that can't be set by a shader unit test.
+     if (global.typeAttribute.qualifier &&
+         global.typeAttribute.qualifier != 'const' &&
+         !(this.testType == glslunit.testing.TestCase.TestType.VERTEX &&
+           global.typeAttribute.qualifier.search('varying') != -1)) {
+       this.globalVariableNames_[i] = global;
+     }
+   }
 };
 
 
@@ -155,6 +205,16 @@ glslunit.testing.TestCase.TestType = {
 glslunit.testing.TestCase.prototype.getDescription = function() {
   return this.description_;
 };
+
+
+/**
+ * Gets the list of warnings hit during the test case.
+ * @return {!Array.<string>} The list of warnings.
+ */
+glslunit.testing.TestCase.prototype.getTestWarnings = function() {
+  return this.testWarnings_;
+};
+
 
 
 /**
@@ -212,6 +272,7 @@ glslunit.testing.TestCase.prototype.run = function() {
   this.expectations_ = [];
   this.values_ = [];
   this.defines_ = [];
+  this.testWarnings_ = [];
 
   // Run the Test case
   this.testFn_(this.context_);
@@ -222,10 +283,21 @@ glslunit.testing.TestCase.prototype.run = function() {
   delete window.expect;
   delete window.expectDiscard;
 
-
   var variables = [];
+  var setVariables = {};
   for (var i in this.values_) {
-    variables.push(this.values_[i].getShaderVariable());
+    var shaderVariable = this.values_[i].getShaderVariable();
+    setVariables[shaderVariable.getName()] = true;
+    variables.push(shaderVariable);
+  }
+
+  for (var i in this.globalVariableNames_) {
+    if (!(i in setVariables)) {
+      this.testWarnings_.push('Warning: variable "' + i + '" was not set.  ' +
+          'Expected input of type "' +
+          glslunit.Generator.getSourceCode(
+              this.globalVariableNames_[i].typeAttribute) + '"');
+    }
   }
 
   var testAst = this.sourceAst_;

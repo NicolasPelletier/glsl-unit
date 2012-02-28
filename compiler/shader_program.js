@@ -6,6 +6,7 @@
  * @author rowillia@google.com (Roy Williams)
  */
 
+goog.provide('glslunit.compiler.JsConst');
 goog.provide('glslunit.compiler.ShaderAttributeEntry');
 goog.provide('glslunit.compiler.ShaderMode');
 goog.provide('glslunit.compiler.ShaderProgram');
@@ -13,22 +14,62 @@ goog.provide('glslunit.compiler.ShaderUniformEntry');
 
 goog.require('glslunit.Generator');
 
+
+
 /**
  * Structure for shader modes.
  * @constructor
  */
 glslunit.compiler.ShaderMode = function() {
   /**
-   * The preprocessor name for this mode
+   * The preprocessor name for this mode.
    * @type {string}
    */
   this.preprocessorName = '';
+
+  /**
+   * The shortened name for this mode.
+   * @type {string}
+   */
+  this.shortName = '';
 
   /**
    * The list of options for this mode.
    * @type {Array.<!{name: string, value: number}>}
    */
   this.options = [];
+};
+
+
+
+/**
+ * Variant of a shader program.
+ * @constructor
+ */
+glslunit.compiler.ShaderVariant = function() {
+  /**
+   * The name of this variant.
+   * @type {string}
+   */
+  this.name = '';
+
+  /**
+   * The set values of modes for this variant.
+   * @type {Array.<!{name: string, value: number}>}
+   */
+  this.modeSettings = [];
+
+  /**
+   * The source code for the fragment shader for this variant.
+   * @type {!Object}
+   */
+  this.fragmentAst = {};
+
+  /**
+   * The source code for the vertex shader for this variant.
+   * @type {!Object}
+   */
+  this.vertexAst = {};
 };
 
 
@@ -70,6 +111,7 @@ glslunit.compiler.ShaderAttributeEntry = function() {
 };
 
 
+
 /**
  * Structure for a shader uniform.
  * @constructor
@@ -93,6 +135,7 @@ glslunit.compiler.ShaderUniformEntry = function() {
    */
   this.type = '';
 };
+
 
 
 /**
@@ -125,16 +168,29 @@ glslunit.compiler.ShaderProgram = function() {
   this.namespace = '';
 
   /**
-   * The source code for the fragment shader for this program.
-   * @type {!Object}
+   * Array of required javascript classes.
+   * @type {!Array.<string>}
    */
-  this.fragmentAst = {};
+  this.jsRequires = [];
 
   /**
-   * The source code for the vertex shader for this program.
-   * @type {!Object}
+   * Array of required javascript classes.
+   * @type {!Array.<{value: string, expression: string}>}
    */
-  this.vertexAst = {};
+  this.jsConsts = [];
+
+  /**
+   * Map of properties to be passed down to the template
+   * @type {!Object.<string, string>}
+   */
+  this.templateProperties = {};
+
+  /**
+   * When accessing fragmentSource/vertexSource, if prettyPrint is true
+   * the source will be pretty printed.
+   * @type {boolean}
+   */
+  this.prettyPrint = false;
 
   /**
    * The original, unoptimized vertex source code.
@@ -147,19 +203,6 @@ glslunit.compiler.ShaderProgram = function() {
    * @type {string}
    */
   this.originalFragmentSource = '';
-
-  /**
-   * When accessing fragmentSource/vertexSource, if prettyPrint is true
-   * the source will be pretty printed.
-   * @type {boolean}
-   */
-  this.prettyPrint = false;
-
-  /**
-   * Map of the original name of a definition to it's name in the compiled code.
-   * @type {Object.<string, string>}
-   */
-  this.defineMap = null;
 
   /**
    * Map of the original name of a definition to the ShaderAttributeEntry with
@@ -181,22 +224,16 @@ glslunit.compiler.ShaderProgram = function() {
   this.shaderModes = [];
 
   /**
-   * Array of required javascript classes.
-   * @type {!Array.<string>}
+   * The source code for the fragment shader for this program.
+   * @type {!Object}
    */
-  this.jsRequires = [];
+  this.fragmentAst = {};
 
   /**
-   * Array of required javascript classes.
-   * @type {!Array.<{value: string, expression: string}>}
+   * The source code for the vertex shader for this program.
+   * @type {!Object}
    */
-  this.jsConsts = [];
-
-  /**
-   * Map of properties to be passed down to the template
-   * @type {!Object.<string, string>}
-   */
-  this.templateProperties = {};
+  this.vertexAst = {};
 };
 
 
@@ -299,11 +336,30 @@ glslunit.compiler.ShaderProgram.prototype.defaultUniformsAndAttributes =
     var uniform = this.uniformMap[uniformName];
     uniformShortNameToEntry[uniform.shortName] = uniform;
   }
-  var publicVars = glslunit.NodeCollector.collectNodes(this.vertexAst,
-                                                       function(node) {
+  this.defaultProgramVariables_(this.vertexAst, attributeShortNameToEntry,
+                                uniformShortNameToEntry);
+  this.defaultProgramVariables_(this.fragmentAst, attributeShortNameToEntry,
+                                uniformShortNameToEntry);
+};
+
+
+/**
+ * @param {!Object} ast The AST we're defaulting program variables for.
+ * @param {!Object.<string, glslunit.compiler.ShaderAttributeEntry>}
+ *     attributeShortNameToEntry Map of the short name for an attribute to its
+ *     entry.
+ * @param {!Object.<string, glslunit.compiler.ShaderUniformEntry>}
+ *     uniformShortNameToEntry Map of the short name for a uniform to its
+ *     entry.
+ * @private
+ */
+glslunit.compiler.ShaderProgram.prototype.defaultProgramVariables_ =
+    function(ast, attributeShortNameToEntry, uniformShortNameToEntry) {
+  var publicVars = glslunit.NodeCollector.collectNodes(ast,
+    function(node) {
     return node.type == 'declarator' &&
-           (node.typeAttribute.qualifier == 'attribute' ||
-            node.typeAttribute.qualifier == 'uniform');
+        (node.typeAttribute.qualifier == 'attribute' ||
+        node.typeAttribute.qualifier == 'uniform');
   });
   goog.array.forEach(publicVars, function(publicVar) {
     goog.array.forEach(publicVar.declarators, function(declarator) {

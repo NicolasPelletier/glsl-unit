@@ -98,7 +98,7 @@ EOF
   = !.
 
 _ "whitespace"
-  = (newLine / [\r\t\f\v ] / comment)+
+  = (newLine / [\\\n] / [\r\t\f\v ] / comment)+
 
 noNewlineComment
   = "/*" (!"*/" .)* "*/"
@@ -144,8 +144,10 @@ external_statement
 external_declaration
   = function_definition
   / global_declaration
+  / preprocessor_define
   / preprocessor_operator
   / struct_definition
+  / macro_call
 
 
 // TODO(rowillia):  The preprocessor rules here are a hack.  This won't truely
@@ -163,7 +165,7 @@ external_declaration
 // preprocessor.  We believe the above occurance is somewhat rare, so we can
 // ignore it for now.
 preprocessor_operator
-  = "#" directive:("define"/ "undef" / "pragma"/
+  = "#" directive:("undef" / "pragma"/
                    "version"/ "error" / "extension" /
                    "line")
     _ value:(defname:[^\n]* {return defname.join("")}) (newLine/EOF) {
@@ -174,9 +176,83 @@ preprocessor_operator
     });
   }
 
+macro_identifier
+  = head:[A-Za-z_] tail:[A-Za-z_0-9]* {
+     return new node({
+       type: "identifier",
+       name: head + tail.join("")
+     });
+  }
+
+preprocessor_parameter_list =
+  // No space is allowed between a macro's identifier and its opening
+  // paren
+  "(" head:(macro_identifier)?
+  tail:(comma macro_identifier)* right_paren {
+    if (!head) {
+      return [];
+    }
+    return [ head ].concat(tail.map(function(item) { return item[1]; }));
+  }
+
+macro_paren_parameter =
+  left_paren  value:(head:[^()]* paren:macro_paren_parameter? tail:[^()]* {
+    return head.join("") + paren + tail.join("");
+  }) right_paren {
+    return "(" + value + ")";
+  }
+
+macro_call_parameter =
+  macro_paren_parameter / value:[^,)]* {
+    return value.join("");
+  }
+
+macro_call_parameter_list =
+  head:macro_call_parameter tail:(comma macro_call_parameter)* {
+    return [head].concat(tail.map(function(item) { return item[1]; }));
+  }
+
+macro_call
+  = macro_name:macro_identifier _? left_paren
+    // Explicitly use "")" at the end of the line as to not eat any whitespace
+    // after the macro call.
+    parameters:(parameter_list?) ")" {
+      var result = new node({
+        type: "macro_call",
+        macro_name: macro_name,
+        parameters: parameters
+      });
+      if (!parameters) {
+        result.parameters = [];
+      }
+      return result;
+    }
+
+macro_call_line =
+  head:macro_call? tail:[^\n]* {
+    return {
+      macro_call: head,
+      rest_of_line: tail.join('')
+    }
+  }
+
+preprocessor_define
+  = "#" _? "define" _ identifier:macro_identifier
+    parameters:preprocessor_parameter_list?
+    [ \t]* token_string:(defname:[^\n]* {return defname.join("")})
+    (newLine/EOF) {
+    return new node({
+         type: "preprocessor",
+         directive: "#define",
+         identifier: identifier.name,
+         token_string: token_string,
+         parameters: parameters || null
+       });
+     }
+
 preprocessor_if
-  = "#" directive:("ifdef" / "ifndef"/ "if")
-     _ value:(defname:[^\n]* {return defname.join("")}) (newLine/EOF){
+  = "#" _? directive:("ifdef" / "ifndef"/ "if")
+     _ value:(defname:[^\n]* {return defname.join("")}) (newLine/EOF) {
        return new node({
          type: "preprocessor",
          directive: "#" + directive,
@@ -185,7 +261,8 @@ preprocessor_if
      }
 
 preprocessor_else_if
-  = "#elif" _ value:(defname:[^\n]* {return defname.join("")}) (newLine/EOF) {
+  = "#" _? "elif" _ value:(defname:[^\n]* {return defname.join("")})
+    (newLine/EOF) {
       return new node({
         type: "preprocessor",
         directive: "#elif",
@@ -194,7 +271,7 @@ preprocessor_else_if
     }
 
 preprocessor_else
-  = "#else" noNewlineWhitespace? newLine {
+  = "#" _? "else" noNewlineWhitespace? newLine {
     return new node({
       type: "preprocessor",
       directive: "#else"
@@ -202,7 +279,7 @@ preprocessor_else
   }
 
 preprocessor_end
-  = "#endif" noNewlineWhitespace? (newLine/EOF) _?
+  = "#" _? "endif" noNewlineWhitespace? (newLine/EOF) _?
 
 preprocessor_external_branch
   = if_directive:(preprocessor_if external_statement_list)
@@ -263,7 +340,9 @@ simple_statement
   / selection_statement
   / iteration_statement
   / jump_statement
-  / preprocessor_operator) {
+  / preprocessor_define
+  / preprocessor_operator
+  / macro_call) {
     return statement;
   }
 
@@ -751,7 +830,7 @@ postfix_expression
     }
 
 postfix_expression_no_repeat
-  = head:postfix_expression
+  = head:postfix_expression _?
     tail:("++" / "--")?
     rest:(field_selector / index_accessor)* {
       var result = head;

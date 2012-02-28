@@ -424,7 +424,17 @@ glslunit.Generator.prototype.visitPreprocessor = function(node) {
     this.sourceCode_ += this.newline_str_;
   }
   this.sourceCode_ += node.directive;
-  this.sourceCode_ += this.checkAndAdd(' ', node.value, '');
+  if (node.directive == '#define') {
+    this.sourceCode_ += ' ' + node.identifier;
+    if (node.parameters) {
+      this.sourceCode_ += '(';
+      this.addNodesWithJoin_(node.parameters, ',');
+      this.sourceCode_ += ')';
+    }
+    this.sourceCode_ += this.checkAndAdd(' ', node.token_string, '');
+  } else {
+    this.sourceCode_ += this.checkAndAdd(' ', node.value, '');
+  }
   this.sourceCode_ += this.newline_str_;
   if (node.guarded_statements) {
     this.addNodesWithJoin_(node.guarded_statements, '');
@@ -721,22 +731,20 @@ glslunit.Generator.formatFloat = function(value) {
   if (value == 0) {
     return '0.';
   }
-  // Strip off any +'s and any leading 0's
-  var floatStr = ('' + value).toLowerCase().
-      replace('+', '').
-      replace(/^0*/g, '');
-  if (floatStr.indexOf('e') != -1) {
-    return floatStr;
+  var lowerAndStrip = function(x) {
+    // Strip off any +'s and any leading 0's
+    return x.toLowerCase().replace(/^0*|\+/g, '').
+        // Older versions of Firefox's implementation of toExponential will
+        // leave trailing 0's after the mantissa.  So,
+        // (100).toExponential() -> '1.0000e2'.
+        // The below regex removes these extra 0s.
+        replace(/(?:(\.[1-9]+)|\.)0*e/g, '$1e');
   }
-  if (floatStr.indexOf('.') == -1) {
+  var floatStr = lowerAndStrip('' + value);
+  var expStr = lowerAndStrip(value.toExponential());
+  if (floatStr.indexOf('.') == -1 && floatStr.indexOf('e') == -1) {
     floatStr += '.';
   }
-  // Strip trailing 0's
-  floatStr = floatStr.replace(/0*$/g, '');
-  var absVal = Math.abs(value);
-  var digits = Math.floor(Math.log(absVal) / Math.LN10);
-  var expStr = (value < 0 ? '-' : '') +
-      absVal / Math.pow(10, digits) + 'e' + digits;
   return floatStr.length <= expStr.length ? floatStr : expStr;
 };
 

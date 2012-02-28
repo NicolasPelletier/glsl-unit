@@ -69,7 +69,7 @@ goog.node.commandLineFlag = function(name, type, defaultValue, description) {
 
   /**
    * The value set from the command line of this flag.
-   * @type {Object|undefined}
+   * @type {*|undefined}
    */
   this.value = undefined;
 };
@@ -95,9 +95,10 @@ goog.node.commandLineFlag.prototype.getValue = function() {
   return this.defaultValue;
 };
 
+
 /**
  * Sets the current value for this flag.
- * @return {string} The value of the flag.
+ * @param {Object|undefined} value The value of the flag.
  */
 goog.node.commandLineFlag.prototype.parseValue = function(value) {
   this.value = value;
@@ -124,10 +125,11 @@ goog.node.arrayCommandLineFlag = function(name, type,
    * @type {Array|undefined}
    * @override
    */
-  this.value = [];
+  this.value = undefined;
 };
 goog.inherits(goog.node.arrayCommandLineFlag,
               goog.node.commandLineFlag);
+
 
 /**
  * Sets the current value for this flag.
@@ -140,6 +142,7 @@ goog.node.arrayCommandLineFlag.prototype.parseValue = function(value) {
     this.value.push(value);
   }
 };
+
 
 /**
  * Object for declaring and retrieving flag values.

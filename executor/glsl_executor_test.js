@@ -11,10 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 /**
  * @fileoverview Test cases for the Executor.
  * @author rowillia@google.com (Roy Williams)
  */
+
+
 goog.require('glslunit.Executor');
 goog.require('glslunit.NumberShaderVariable');
 goog.require('glslunit.TextureShaderVariable');
@@ -43,13 +46,13 @@ function setUp() {
     deleteProgram: func
   };
   vertSource =
-    'void main(){\n' +
-    '  gl_Position=vec4(1.,0.,0.,1.);\n' +
-    '}\n';
+      'void main(){\n' +
+      '  gl_Position=vec4(1.,0.,0.,1.);\n' +
+      '}\n';
   fragSource =
-    'void main(){\n' +
-    '  gl_FragColor=vec4(1.,0.,0.,1.);\n' +
-    '}\n';
+      'void main(){\n' +
+      '  gl_FragColor=vec4(1.,0.,0.,1.);\n' +
+      '}\n';
 }
 
 
@@ -137,8 +140,9 @@ function testDecodeFloat() {
   testValues = [234, 137, 170, 95]; // 555.0
   assertTrue('Too much error for golden test 555',
              Math.abs((glslunit.Executor.decodeFloat(testValues) -
-               555.0) / 555.0) < 1e-5);
+                 555.0) / 555.0) < 1e-5);
 }
+
 
 /**
  * Tests that the encoded function is added properly.
@@ -159,6 +163,7 @@ function testAddEncodeFunction() {
                'encodeFloat',
                instrumented.statements[2].name);
 }
+
 
 /**
  * Tests that all of the proper WebGL calls are made when making a call to
@@ -204,7 +209,7 @@ function testExtractCall() {
                   webglMock.DEPTH_BUFFER_BIT);
 
   var mockVariable = new goog.testing.LooseMock(
-    new glslunit.NumberShaderVariable(null, null, null));
+      new glslunit.NumberShaderVariable(null, null, null));
   mockVariable.getLocation(goog.testing.mockmatchers.isObject,
                            goog.testing.mockmatchers.isObject)
     .$times(2)
@@ -219,14 +224,14 @@ function testExtractCall() {
   var mockTextureVariables = [];
   for (var i = 0; i < 3; i++) {
     var mockTextureVariable = new goog.testing.LooseMock(
-      new glslunit.TextureShaderVariable(null, null, 0, 0, null));
+        new glslunit.TextureShaderVariable(null, null, 0, 0, null));
     mockTextureVariable.setGlobalVariables(
-      goog.testing.mockmatchers.isObject,
-      goog.testing.mockmatchers.isObject);
+        goog.testing.mockmatchers.isObject,
+        goog.testing.mockmatchers.isObject);
     mockTextureVariable.getLocation(goog.testing.mockmatchers.isObject,
-                                    goog.testing.mockmatchers.isObject)
-      .$times(2)
-      .$returns(i % 2 == 0 ? 123 : null);
+                                    goog.testing.mockmatchers.isObject).
+        $times(2).
+        $returns(i % 2 == 0 ? 123 : null);
     if (i % 2 == 0) {
       mockTextureVariable.bufferData(webglMock, sProgram, 3, i / 2);
       mockTextureVariable.getIsTexture().$returns(true);
@@ -240,26 +245,26 @@ function testExtractCall() {
   var bufferCalled = false;
   var cleanupCalled = false;
   glslunit.NumberShaderVariable.prototype.bufferAttribute =
-    function(context, program, size, verticies) {
-      var testVerticies = [-1.0, 1.0, 0.0,
-                           -1.0, -1.0, 0.0,
-                            1.0, 1.0, 0.0];
-      assertEquals(webglMock, context);
-      assertEquals(sProgram, program);
-      assertEquals(3, size);
-      assertTrue(goog.array.equals(testVerticies, verticies));
-      bufferCalled = true;
-    };
+      function(context, program, size, verticies) {
+        var testVerticies = [-1.0, 1.0,0.0,
+                             -1.0,-1.0,0.0,
+                              1.0, 1.0,0.0];
+        assertEquals(webglMock, context);
+        assertEquals(sProgram, program);
+        assertEquals(3, size);
+        assertTrue(goog.array.equals(testVerticies, verticies));
+        bufferCalled = true;
+      };
   glslunit.NumberShaderVariable.prototype.bindData =
-    function(context, program) {
-      assertEquals(webglMock, context);
-      assertEquals(sProgram, program);
-      assertTrue(bufferCalled);
-    };
+      function(context, program) {
+        assertEquals(webglMock, context);
+        assertEquals(sProgram, program);
+        assertTrue(bufferCalled);
+      };
   glslunit.NumberShaderVariable.prototype.cleanUp = function(context) {
-    assertEquals(webglMock, context);
-    cleanupCalled = true;
-  }
+      assertEquals(webglMock, context);
+      cleanupCalled = true;
+    }
   webglMock.drawArrays(webglMock.TRIANGLE_STRIP, 0, 3);
 
   var assignBuff = function(u1, u2, u3, u4, u5, u6, buff) {
@@ -272,15 +277,15 @@ function testExtractCall() {
   webglMock.readPixels(0, 1, 1, 1, webglMock.RGBA,
                        webglMock.UNSIGNED_BYTE,
                        goog.testing.mockmatchers.isObject).
-    $does(assignBuff);
+      $does(assignBuff);
   webglMock.readPixels(0, 249, 1, 1, webglMock.RGBA,
                        webglMock.UNSIGNED_BYTE,
                        goog.testing.mockmatchers.isObject).
-    $does(assignBuff);
+      $does(assignBuff);
   webglMock.readPixels(148, 249, 1, 1, webglMock.RGBA,
                        webglMock.UNSIGNED_BYTE,
                        goog.testing.mockmatchers.isObject).
-    $does(assignBuff);
+      $does(assignBuff);
 
   mockVariable.$replay();
   webglMock.deleteProgram(sProgram);

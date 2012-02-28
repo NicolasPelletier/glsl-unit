@@ -143,6 +143,15 @@ glslunit.compiler.RE_OVERRIDE_ = /\/\/!\s*OVERRIDE\s+(\S+)\s+(\S+)/;
 
 
 /**
+ * Regular expression for defining a program
+ * @type {RegExp}
+ * @const
+ * @private
+ */
+glslunit.compiler.RE_PROGRAM_ = /\/\/!\s*PROGRAM\s+(\S+)\s+(.*)/;
+
+
+/**
  * Given a source file and a map of library files, parses the source file into
  *      the object that stores information on how to compile and output this
  *      shader class.
@@ -159,8 +168,7 @@ glslunit.compiler.Preprocessor.ParseFile = function(fileName, libraryFiles) {
 
   try {
     result.vertexAst =
-        glslunit.glsl.parser.parse(result.originalVertexSource,
-                                   'vertex_start');
+        glslunit.glsl.parser.parse(result.originalVertexSource, 'vertex_start');
   } catch (e) {
     throw glslunit.compiler.Preprocessor.FormatParseError_(e,
                                                            'vertex',
@@ -169,8 +177,9 @@ glslunit.compiler.Preprocessor.ParseFile = function(fileName, libraryFiles) {
   }
   try {
     result.fragmentAst =
-        glslunit.glsl.parser.parse(result.originalFragmentSource,
-                                   'fragment_start');
+        glslunit.glsl.parser.parse(
+            result.originalFragmentSource,
+            'fragment_start');
   } catch (e) {
     throw glslunit.compiler.Preprocessor.FormatParseError_(e,
                                                            'fragment',
@@ -231,7 +240,8 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
   var inVertex = true;
   var inFragment = true;
   var result = new glslunit.compiler.ShaderProgram();
-  var fileSource = libraryFiles[fileName];
+  // Remove any line continuations
+  var fileSource = libraryFiles[fileName].replace(/\\\n/g, '');
   goog.array.forEach(fileSource.split('\n'), function(line, index) {
     var match;
     if (match = glslunit.compiler.RE_CLASS_.exec(line)) {
@@ -260,7 +270,7 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
       }
       goog.array.forEach(options, function(option) {
         var keyVal = option.split(':');
-        if (keyVal.length != 2) {
+        if (keyVal.length != 2 || !keyVal[1].match(/^[0-9]+$/)) {
           throw fileName + ' ' + index + ':0 ' +
               'Mode option has invalid format!\n' +
               '\t' + line;
@@ -289,6 +299,21 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
       result.jsRequires.push(match[1]);
     } else if (match = glslunit.compiler.RE_JSCONST_.exec(line)) {
       result.jsConsts.push({value: match[1], expression: match[2]});
+    } else if (match = glslunit.compiler.RE_PROGRAM_.exec(line)) {
+      var variant = new glslunit.compiler.ShaderVariant();
+      variant.name = match[1];
+      var modeSettings = match[2].split(',');
+      goog.array.forEach(modeSettings, function(setting) {
+        var keyVal = setting.split(':');
+        if (keyVal.length != 2 || !keyVal[1].match(/^[0-9]+$/)) {
+          throw fileName + ' ' + index + ':0 ' +
+              'Program mode setting has invalid format!\n' +
+              '\t' + line;
+        }
+        variant.modeSettings.push({name: keyVal[0],
+                                   value: parseInt(keyVal[1], 10)});
+      });
+      result.shaderModes.push(mode);
     }
     if (inFragment) {
       result.originalFragmentSource += line + '\n';

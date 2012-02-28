@@ -13,10 +13,7 @@
 // limitations under the License.
 
 /**
- * @fileoverview The executor is responsible for executing GLSL Code and
- *     extracting target values from that execution.  It is subclassed into the
- *     VertexExecutor and the FragmentExecutor which are responsible for
- *     extracting data from their respective shader types.
+ * @fileoverview This file contains the source code for the GLSL Executor.
  *
  * Abstract method must be overridden by subclassed Executors:
  *   getFragmentAst - gets the AST for the fragment shader.
@@ -37,7 +34,6 @@ goog.require('glslunit.glsl.parser');
 goog.require('goog.object');
 
 
-
 /**
  * @typedef {number|!Array.<number>|glslunit.Executor.DecodeStatus}
  */
@@ -46,21 +42,21 @@ glslunit.ExtractedValue;
 
 
 /**
- * Constructs an Executor.
+ * The executor is responsible for executing GLSL Code and extracting target
+ * values from that execution.  It is subclassed into the VertexExecutor and
+ * the FragmentExecutor which are responsible for extracting data from their
+ * respective shader types.
  * @param {!WebGLRenderingContext} context The WebGL  context.
  * @param {!Object} sourceAst The AST of the GLSL code we want to execute and
  *     extract a value from.
- * @param {!Array.<glslunit.ShaderVariable>} variables The array of variables to
- *     use when extracting values from the GLSL program.
+ * @param {!Array.<!glslunit.ShaderVariable>} variables The array of variables
+ *     to use when extracting values from the GLSL program.
  * @param {number} viewportHeight The height of context's canvas.
  * @param {number} viewportWidth The width of context's canvas.
  * @constructor
  */
-glslunit.Executor = function(context,
-                             sourceAst,
-                             variables,
-                             viewportHeight,
-                             viewportWidth) {
+glslunit.Executor = function(
+    context, sourceAst, variables, viewportHeight, viewportWidth) {
   /**
    * The WebGL context.
    * @type {!WebGLRenderingContext}
@@ -98,9 +94,8 @@ glslunit.Executor = function(context,
 
   /**
    * A Map of all variables that were renamed from their original names to their
-   *     new names.  A variable might be renamed if it was a reference to a
-   *     built in variable to allow the developer the ability to specify its
-   *     value.
+   * new names.  A variable might be renamed if it was a reference to a built in
+   * variable to allow the developer the ability to specify its value.
    * @type {!Object}
    * @protected
    */
@@ -121,7 +116,6 @@ glslunit.Executor.DecodeStatus = {
 /**
  * The number of test vertices.
  * @type {number}
- * @const
  */
 glslunit.Executor.TEST_VERTEX_COUNT = 3;
 
@@ -131,13 +125,12 @@ glslunit.Executor.TEST_VERTEX_COUNT = 3;
  * @type {string}
  * @const
  */
-glslunit.Executor.testTriangleSource =
-  'attribute vec3 aTestTriangle;';
+glslunit.Executor.testTriangleSource = 'attribute vec3 aTestTriangle;';
 
 
 /**
  * The GLSL source code for a function which will encode an
- *     arbitrary float in color.
+ * arbitrary float in color.
  * @type {string}
  * @private
  * @const
@@ -179,8 +172,8 @@ glslunit.Executor.encodeFloatSource_ =
  * @private
  * @const
  */
-glslunit.Executor.encodeFloatAST_ =
-  glslunit.glsl.parser.parse(glslunit.Executor.encodeFloatSource_);
+glslunit.Executor.encodeFloatAst_ =
+    glslunit.glsl.parser.parse(glslunit.Executor.encodeFloatSource_);
 
 
 /**
@@ -194,30 +187,30 @@ glslunit.Executor.encodeFloatAST_ =
  * @param {!Uint8Array} buffer Color data read back with readPixels.
  * @nosideeffects
  * @return {glslunit.ExtractedValue} The decoded float value.  If -0 was
- *    decoded, we know that the shader discarded so we return 'discard'.
+ *     decoded, we know that the shader discarded so we return 'discard'.
  */
 glslunit.Executor.decodeFloat = function(buffer) {
   // When we encode the float, we only store values in the mantissa channels
-  // from 0-(255.0/256.0).  We do this because otherwise, channels could overlap
+  // from 0-(255.0/256.0).  We do this because otherwise, channels could
   // overlap.  Storing 1/255.0 would result in (1, 255, 0) in the gba channels
   // since both g and b can represent 1/255.  We use this fixed value to prevent
   // overlap.
   var fromFixed = 256.0 / 255.0;
-  var values = /** @type {Array.<number>} */ Array(4);
+  var values = [];
   values[0] = buffer[0] >> 2;
   values[1] = buffer[1] / 255.0;
   values[2] = buffer[2] / 255.0;
   values[3] = buffer[3] / 255.0;
   var sign = Number((values[0] & 0x00000020) > 0);
   var expField = Number(values[0] & 0x0000001F) - 16;
-  var mantissa = Number(values[1] * fromFixed / (1.0) +
-          values[2] * fromFixed / (255.0) +
-          values[3] * fromFixed / (255.0 * 255.0));
+  var mantissa = Number(values[1] * fromFixed / 1.0 +
+      values[2] * fromFixed / 255.0 +
+      values[3] * fromFixed / (255.0 * 255.0));
   if (mantissa == 0 && sign == 0) {
     // Decoded -0, which is used to signal that the shader discarded.
     return glslunit.Executor.DecodeStatus.DISCARD;
   }
-  return (-1 + (sign * 2)) * Math.pow(2, expField) * mantissa;
+  return (-1 + sign * 2) * Math.pow(2, expField) * mantissa;
 };
 
 
@@ -231,14 +224,14 @@ glslunit.Executor.decodeFloat = function(buffer) {
  */
 glslunit.Executor.prototype.compileShader_ = function(shaderAst, shaderType) {
   var shader =
-      /** @type {!WebGLShader} */ this.context.createShader(shaderType);
+      /** @type {!WebGLShader} */ (this.context.createShader(shaderType));
   var shaderSource = glslunit.Generator.getSourceCode(shaderAst, '\n', true);
   this.context.shaderSource(shader, shaderSource);
   this.context.compileShader(shader);
   if (!this.context.getShaderParameter(shader, this.context.COMPILE_STATUS)) {
     var errorMessage = this.context.getShaderInfoLog(shader);
-    throw new Error('Couldn\'t compile shader: ' + errorMessage +
-                    '\n' + shaderSource);
+    throw Error('Couldn\'t compile shader: ' + errorMessage +
+                '\n' + shaderSource);
   }
   return shader;
 };
@@ -246,19 +239,20 @@ glslunit.Executor.prototype.compileShader_ = function(shaderAst, shaderType) {
 
 /**
  * Compiles the vertex and fragment shaders, links them into a program, and uses
- *     that program.
+ * that program.
  * @param {!Object} vertexAst AST for the vertex shader.
  * @param {!Object} fragmentAst AST for the fragment shader.
  * @return {!WebGLProgram} The WebGLProgram created from the two input shader
  *     programs.
  * @private
  */
-glslunit.Executor.prototype.setupShaderPrograms_ = function(vertexAst,
-                                                            fragmentAst) {
+glslunit.Executor.prototype.setupShaderPrograms_ = function(
+    vertexAst, fragmentAst) {
   var vshader = this.compileShader_(vertexAst, this.context.VERTEX_SHADER);
   var fshader = this.compileShader_(fragmentAst, this.context.FRAGMENT_SHADER);
 
-  var shaderProgram = /** @type {!WebGLProgram} */ this.context.createProgram();
+  var shaderProgram = /** @type {!WebGLProgram} */
+      (this.context.createProgram());
   this.context.attachShader(shaderProgram, vshader);
   this.context.attachShader(shaderProgram, fshader);
   this.context.linkProgram(shaderProgram);
@@ -276,20 +270,20 @@ glslunit.Executor.prototype.setupShaderPrograms_ = function(vertexAst,
  */
 glslunit.Executor.addEncodeFunction_ = function(targetAst) {
   return glslunit.SpliceTransformer.splice(targetAst, targetAst,
-    'statements', 0, 0, glslunit.Executor.encodeFloatAST_.statements);
+      'statements', 0, 0, glslunit.Executor.encodeFloatAst_.statements);
 };
 
 
 /**
  * Prepares an AST for extraction by renaming any main functions and adding the
- *     extraction code.
+ * extraction code.
  * @return {{testAst: !Object, foundMain: boolean}}
  *     testAst is the ast prepared for testing.
  *     foundMain is True if a main function was found, false otherwise.
  * @protected
  */
 glslunit.Executor.prototype.prepareAst = function() {
-  //Rename 'main'
+  // Rename 'main'
   var mainPrototype = glslunit.glsl.parser.parse('void main()',
                                                  'function_prototype');
   var mainRenamer = new glslunit.FunctionRenameTransformer(mainPrototype,
@@ -297,7 +291,7 @@ glslunit.Executor.prototype.prepareAst = function() {
   var testAst = mainRenamer.transformNode(this.sourceAst);
   var foundMain = testAst != this.sourceAst;
 
-  // Add extraction code
+  // Add extraction code.
   testAst = glslunit.Executor.addEncodeFunction_(testAst);
   return {testAst: testAst, foundMain: foundMain};
 };
@@ -328,6 +322,83 @@ glslunit.Executor.prototype.getFragmentAst = goog.abstractMethod;
 
 
 /**
+ * Initializes the current WebGLContext to be used with testing.
+ * @private
+ */
+glslunit.Executor.prototype.initContext_ = function() {
+  this.context.clearColor(0.0, 0.0, 0.0, 0.0);
+  this.context.enable(this.context.DEPTH_TEST);
+  this.context.viewport(0, 0, this.viewportWidth, this.viewportHeight);
+  this.context.clear(this.context.COLOR_BUFFER_BIT |
+                     this.context.DEPTH_BUFFER_BIT);
+};
+
+
+/**
+ * Creates and uploads the test variables needed for extraction.
+ * @param {!Object} vertexAst The AST for the vertex shader.
+ * @param {!Object} fragmentAst The AST for the fragment shader.
+ * @param {!WebGLProgram} shaderProgram The shader program to extract a value
+ *     from.
+ * @return {!glslunit.NumberShaderVariable} The buffer for the test triangle.
+ * @private
+ */
+glslunit.Executor.prototype.createTestVariables_ = function(
+    vertexAst, fragmentAst, shaderProgram) {
+  var globalVariables =
+      glslunit.VariableScopeVisitor.getVariablesInScope(vertexAst,
+                                                        vertexAst,
+                                                        true);
+
+  // We need to gather any uniform variables declared in the fragment shader.
+  var fragmentVariables =
+      glslunit.VariableScopeVisitor.getVariablesInScope(fragmentAst,
+                                                        fragmentAst,
+                                                        true);
+
+  for (var i in fragmentVariables) {
+    if (fragmentVariables[i].typeAttribute.qualifier == 'uniform') {
+      globalVariables[i] = fragmentVariables[i];
+    }
+  }
+
+  // Buffer any variables.
+  var textureCount = 0;
+  goog.array.forEach(this.variables, function(variable) {
+    // The shader program may have optimized away this variable.  Don't buffer
+    // anything for it in this case.
+    variable.setGlobalVariables(globalVariables, this.renameMap);
+    if (variable.getLocation(this.context, shaderProgram) != null) {
+      variable.bufferData(this.context, shaderProgram,
+                          glslunit.Executor.TEST_VERTEX_COUNT, textureCount);
+      if (variable.getIsTexture()) {
+        textureCount++;
+      }
+    }
+  }, this);
+
+  // Buffer the test triangle.
+  var testTriangle = new glslunit.NumberShaderVariable('aTestTriangle', null);
+  var testVerticies = [
+      -1.0,  1.0, 0.0,
+      -1.0, -1.0, 0.0,
+       1.0,  1.0, 0.0
+  ];
+  testTriangle.setGlobalVariables(globalVariables, this.renameMap);
+  testTriangle.bufferAttribute(this.context, shaderProgram,
+                               glslunit.Executor.TEST_VERTEX_COUNT,
+                               new Float32Array(testVerticies));
+
+  goog.array.forEach(this.variables, function(variable) {
+    if (variable.getLocation(this.context, shaderProgram) != null) {
+      variable.bindData(this.context, shaderProgram);
+    }
+  }, this);
+  testTriangle.bindData(this.context, shaderProgram);
+  return testTriangle;
+}
+
+/**
  * Executes the test GLSL program and extracts a value from it.
  * @param {!Object} extractionTargetAst AST for the value to be extracted.  This
  *     should evaluate to a single float.
@@ -335,70 +406,23 @@ glslunit.Executor.prototype.getFragmentAst = goog.abstractMethod;
  *     opt_decodeCorner is set, mismatches between corners will be ignored and
  *     the value at the corner specified will be returned.  Should be [0-2].
  * @return {glslunit.ExtractedValue} The value extracted from running the
- *      test GLSL program or the error returned from decoding.
+ *     test GLSL program or the error returned from decoding.
+ * @throws {Error} Throws an exception containing the error text if any of the
+ *     underlying WebGL calls have an error.
  */
-glslunit.Executor.prototype.extractValue = function(extractionTargetAst,
-                                                    opt_decodeCorner) {
-  var shaderProgram, testTriangle;
+glslunit.Executor.prototype.extractValue = function(
+    extractionTargetAst, opt_decodeCorner) {
+  var shaderProgram;
   try {
     var vertexAst = this.getVertexAst(extractionTargetAst);
     var fragmentAst = this.getFragmentAst(extractionTargetAst);
-
     shaderProgram = this.setupShaderPrograms_(vertexAst, fragmentAst);
 
-    this.context.clearColor(0.0, 0.0, 0.0, 0.0);
-    this.context.enable(this.context.DEPTH_TEST);
-    this.context.viewport(0, 0, this.viewportWidth, this.viewportHeight);
-    this.context.clear(this.context.COLOR_BUFFER_BIT |
-                       this.context.DEPTH_BUFFER_BIT);
-    var globalVariables =
-      glslunit.VariableScopeVisitor.getVariablesInScope(vertexAst,
-                                                        vertexAst,
-                                                        true);
+    this.initContext_();
 
-    // We need to gather any uniform variables declared in the fragment shader.
-    var fragmentVariables =
-      glslunit.VariableScopeVisitor.getVariablesInScope(fragmentAst,
-                                                        fragmentAst,
-                                                        true);
-
-    for (var i in fragmentVariables) {
-      if (fragmentVariables[i].typeAttribute.qualifier == 'uniform') {
-        globalVariables[i] = fragmentVariables[i];
-      }
-    }
-
-    // Buffer any variables.
-    var textureCount = 0;
-    goog.array.forEach(this.variables, function(variable) {
-      // The shader program may have optimized away this variable.  Don't buffer
-      // anything for it in this case.
-      variable.setGlobalVariables(globalVariables, this.renameMap);
-      if (variable.getLocation(this.context, shaderProgram) != null) {
-        variable.bufferData(this.context, shaderProgram,
-                            glslunit.Executor.TEST_VERTEX_COUNT, textureCount);
-        if (variable.getIsTexture()) {
-          textureCount++;
-        }
-      }
-    }, this);
-
-    // Buffer the test triangle.
-    testTriangle = new glslunit.NumberShaderVariable('aTestTriangle', null);
-    var testVerticies = [-1.0, 1.0, 0.0,
-                         -1.0, -1.0, 0.0,
-                          1.0, 1.0, 0.0];
-    testTriangle.setGlobalVariables(globalVariables, this.renameMap);
-    testTriangle.bufferAttribute(this.context, shaderProgram,
-                                 glslunit.Executor.TEST_VERTEX_COUNT,
-                                 new Float32Array(testVerticies));
-
-    goog.array.forEach(this.variables, function(variable) {
-      if (variable.getLocation(this.context, shaderProgram) != null) {
-        variable.bindData(this.context, shaderProgram);
-      }
-    }, this);
-    testTriangle.bindData(this.context, shaderProgram);
+    var testTriangle = this.createTestVariables_(vertexAst,
+                                                 fragmentAst,
+                                                 shaderProgram);
 
     // Draw the test GLSL.
     this.context.drawArrays(this.context.TRIANGLE_STRIP, 0,
@@ -412,7 +436,8 @@ glslunit.Executor.prototype.extractValue = function(extractionTargetAst,
     this.context.readPixels(0, this.viewportHeight - 1, 1, 1,
                             this.context.RGBA, this.context.UNSIGNED_BYTE,
                             corners[1]);
-    this.context.readPixels(this.viewportWidth - 2, this.viewportHeight - 1, 1, 1,
+    this.context.readPixels(this.viewportWidth - 2, this.viewportHeight - 1,
+                            1, 1,
                             this.context.RGBA, this.context.UNSIGNED_BYTE,
                             corners[2]);
     var arraysMatch = goog.array.equals(corners[0], corners[1]) &&

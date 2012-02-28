@@ -29,6 +29,7 @@ goog.require('glslunit.IdentifierRenameTransformer');
 goog.require('glslunit.NodeCollector');
 goog.require('glslunit.QualifierTransformer');
 goog.require('glslunit.SpliceTransformer');
+goog.require('glslunit.utils');
 goog.require('goog.string.format');
 
 
@@ -53,12 +54,8 @@ glslunit.FragmentExecutor = function(context,
   var currentAst = sourceAst;
 
   // Rename any builtin global access.
-  var builtinGlobals = ['varying mediump vec4 gl_FragCoord;',
-                        'varying bool gl_FrontFacing;',
-                        'varying mediump vec2 gl_PointCoord;'];
   var nameMap = {};
-  goog.array.forEach(builtinGlobals, function(global) {
-    var globalAst = glslunit.glsl.parser.parse(global, 'global_declaration');
+  goog.array.forEach(glslunit.utils.BUILT_IN_GLOBALS, function(globalAst) {
     var globalName = globalAst.declarators[0].name.name;
     var newName = '__' + globalName;
     var nextAst =

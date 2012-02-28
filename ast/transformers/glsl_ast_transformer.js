@@ -196,7 +196,7 @@ glslunit.ASTTransformer.prototype.transformNode = function(node) {
                                                              [newNode]);
         }
       }
-    } else if (item.type) {
+    } else if (item && item.type) {
       var newNode = this.transformNode(item);
       if (newNode != item) {
         childrenModified = true;

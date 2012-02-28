@@ -28,8 +28,10 @@ function setUp() {
   context = {};
   testSource =
       'uniform vec4 uTestLocation;' +
+      'invariant varying float foo;' +
+      'const int notMe;' +
       'void main(void) {' +
-      '  gl_Position = uTestLocation;' +
+      '  gl_Position = gl_FragCoord;' +
       '}';
   testAst = glslunit.glsl.parser.parse(testSource);
 
@@ -49,7 +51,8 @@ function setUp() {
     assertEquals(glslunit.testing.TestCase.TestType.FRAGMENT, currentTestType);
     assertEquals(c, context);
     assertEquals(s, testAst);
-    assertEquals(v.length, 0);
+    assertEquals(v.length, 1);
+    assertEquals(v[0].name_, 'uTestLocation');
     assertEquals(20, h);
     assertEquals(30, w);
   };
@@ -103,6 +106,9 @@ function testFragmentTestCase() {
         context, 20, 30,
         glslunit.testing.TestCase.TestType.FRAGMENT,
         testAst, 'Test TestCase!', function() {
+    var s = set('uTestLocation');
+    s.asArray([1, 2, 3, 4]);
+    assertEquals('uTestLocation', s.variableName_);
     assertNotUndefined(set);
     assertNotUndefined(expect);
     assertNotUndefined(expectDiscard);
@@ -110,4 +116,10 @@ function testFragmentTestCase() {
     expect('gl_FragColor').equal([1, 2, 3, 4]);
   });
   testCase.run();
+  assertEquals(2, testCase.getTestWarnings().length);
+  assertEquals('Warning: variable "foo" was not set.  Expected input of type ' +
+               '"invariant varying float"', testCase.getTestWarnings()[0]);
+  assertEquals('Warning: variable "gl_FragCoord" was not set.  Expected ' +
+               'input of type "varying mediump vec4"',
+               testCase.getTestWarnings()[1]);
 }

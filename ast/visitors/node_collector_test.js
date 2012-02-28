@@ -36,7 +36,7 @@ function testNodeCollector() {
         node.typeAttribute.qualifier == 'varying';
     if (result) {
       assertEquals(1, parentStack.length);
-      assertEquals('root', parentStack[0].type)
+      assertEquals('root', parentStack[0].type);
     }
     return result;
   });

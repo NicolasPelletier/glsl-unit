@@ -211,6 +211,11 @@ function testVisitValue() {
   assertEquals('42.', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
+    value: 0.42
+  };
+  assertEquals('.42', glslunit.Generator.getSourceCode(testNode));
+  testNode = {
+    type: 'float',
     value: 0.000001
   };
   assertEquals('1e-6', glslunit.Generator.getSourceCode(testNode));
@@ -224,6 +229,11 @@ function testVisitValue() {
     value: 10000
   };
   assertEquals('1e4', glslunit.Generator.getSourceCode(testNode));
+  testNode = {
+    type: 'float',
+    value: 1000
+  };
+  assertEquals('1e3', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: 320000
@@ -586,6 +596,24 @@ function testDo() {
 
 function testPreprocessor() {
   var testNode = {
+          type: 'preprocessor',
+          directive: '#define',
+          identifier: 'FOO',
+          token_string: 'a + b - 1.0',
+          parameters: [
+            {
+              type: 'identifier',
+              name: 'a'
+            },
+            {
+              type: 'identifier',
+              name: 'b'
+            }
+          ]
+        };
+        assertEquals('#define FOO(a,b) a + b - 1.0\n',
+                     glslunit.Generator.getSourceCode(testNode));
+  testNode = {
     type: 'preprocessor',
     directive: '#ifdef',
     value: 'FOO'

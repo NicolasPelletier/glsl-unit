@@ -131,6 +131,7 @@ glslunit.testing.GlslJstdAdapter.prototype.runTestConfiguration =
                                           i,
                                           expectationResultString));
         }, this);
+        Array.prototype.push.apply(testLog, testCase.getTestWarnings());
         testStatus = testCase.getTestPassed() ? 'passed' : 'failed';
         testDone(testCase.getDescription());
       }, this);
