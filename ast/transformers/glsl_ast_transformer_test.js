@@ -20,6 +20,16 @@ goog.require('goog.object');
 
 
 /**
+ * Constructor for GlslAstTransformerTest
+ * @constructor
+ */
+function GlslAstTransformerTest() {
+}
+registerTestSuite(GlslAstTransformerTest);
+
+
+
+/**
  * Test Transformer
  * @constructor
  * @extends {glslunit.ASTTransformer}
@@ -69,7 +79,10 @@ glslunit.TestASTTransformer.prototype.transformDeclaratorItem = function(node) {
 };
 
 
-function testTransformBinary() {
+/**
+ * Test case testTransformBinary
+ */
+GlslAstTransformerTest.prototype.testTransformBinary = function() {
   var testNode = {
     type: 'root',
     statements: [
@@ -111,31 +124,30 @@ function testTransformBinary() {
   };
   var testTransformer = new glslunit.TestASTTransformer();
   var result = testTransformer.transformNode(testNode);
-  assertNotEquals('The root node should not have been resused',
-                  result,
-                  testNode);
-  assertEquals('returnType node should have been reused since none of its ' +
-               'children changed.',
-               result.statements[0].returnType,
-               testNode.statements[0].returnType);
-  assertEquals('Original node should not have been transformed',
-               '*',
-               testNode.statements[0].body.statements[0]
-                   .value.operator.operator);
-  assertEquals('Node should have been transformed',
-               '^^',
-               result.statements[0].body.statements[0]
-                   .value.operator.operator);
-  assertEquals('left of binary should have been reused',
-               testNode.statements[0].body.statements[0].value.left,
-               result.statements[0].body.statements[0].value.left);
-  assertEquals('right of binary should have been reused',
-               testNode.statements[0].body.statements[0].value.right,
-               result.statements[0].body.statements[0].value.right);
-}
+  expectNe(result, testNode, 'The root node should not have been resused');
+  expectEq(result.statements[0].returnType,
+      testNode.statements[0].returnType,
+          'returnType node should have been reused since none of its ' +
+          'children changed.');
+  expectEq('*',
+      testNode.statements[0].body.statements[0].value.operator.operator,
+          'Original node should not have been transformed');
+  expectEq('^^',
+      result.statements[0].body.statements[0].value.operator.operator,
+          'Node should have been transformed');
+  expectEq(testNode.statements[0].body.statements[0].value.left,
+      result.statements[0].body.statements[0].value.left,
+          'left of binary should have been reused');
+  expectEq(testNode.statements[0].body.statements[0].value.right,
+      result.statements[0].body.statements[0].value.right,
+          'right of binary should have been reused');
+};
 
 
-function testArrayUntouched() {
+/**
+ * Test case testArrayUntouched
+ */
+GlslAstTransformerTest.prototype.testArrayUntouched = function() {
   var testSource =
       'void main() {' +
       '  int x = 3 * 5;' +
@@ -145,12 +157,12 @@ function testArrayUntouched() {
   var testAST = glslunit.glsl.parser.parse(testSource);
   var testTransformer = new glslunit.TestASTTransformer();
   var transformedAST = testTransformer.transformNode(testAST);
-  assertTrue('Original source should not have been transformed',
-             glslunit.Generator.getSourceCode(testAST).indexOf('^^') == -1);
-  assertTrue('Transformed source should have been transformed',
-             glslunit.Generator.getSourceCode(
-                 transformedAST).indexOf('^^') != -1);
-}
+  expectTrue(glslunit.Generator.getSourceCode(testAST).indexOf('^^') == -1,
+      'Original source should not have been transformed');
+  expectTrue(
+      glslunit.Generator.getSourceCode(transformedAST).indexOf('^^') != -1,
+      'Transformed source should have been transformed');
+};
 
 /**
  * Test Visitor
@@ -182,7 +194,10 @@ testVisitor.prototype.afterVisitBinary = function(node) {
   this.afterBinaryCount++;
 };
 
-function testMixin() {
+/**
+ * Test case testMixin
+ */
+GlslAstTransformerTest.prototype.testMixin = function() {
   var testSource =
       'void main() {' +
       '  int x = 3 * 5;' +
@@ -194,11 +209,14 @@ function testMixin() {
   var visitor = new testVisitor();
   testTransformer.mixinVisitor(visitor);
   var transformedAST = testTransformer.transformNode(testAST);
-  assertEquals(2, visitor.beforeBinaryCount);
-  assertEquals(2, visitor.afterBinaryCount);
-}
+  expectEq(2, visitor.beforeBinaryCount);
+  expectEq(2, visitor.afterBinaryCount);
+};
 
-function testDelete() {
+/**
+ * Test case testDelete
+ */
+GlslAstTransformerTest.prototype.testDelete = function() {
   var testSource =
       'void main() {' +
       '  if (true) {' +
@@ -218,6 +236,5 @@ function testDelete() {
   var testAST = glslunit.glsl.parser.parse(testSource);
   var testTransformer = new glslunit.TestASTTransformer();
   var transformedAST = testTransformer.transformNode(testAST);
-  assertEquals(expectedSource,
-               glslunit.Generator.getSourceCode(transformedAST));
-}
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(transformedAST));
+};

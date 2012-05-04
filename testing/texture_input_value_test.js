@@ -19,32 +19,50 @@
 goog.require('glslunit.testing.TextureInputValue');
 goog.require('glslunit.testing.UntypedValue');
 goog.require('goog.array');
-goog.require('goog.testing.jsunit');
 
 
-function testWithMipmap() {
+/**
+ * Constructor for TextureInputValueTest
+ * @constructor
+ */
+function TextureInputValueTest() {
+}
+registerTestSuite(TextureInputValueTest);
+
+
+
+/**
+ * Test case testWithMipmap
+ */
+TextureInputValueTest.prototype.testWithMipmap = function() {
   var testValue = new glslunit.testing.UntypedValue(null, 'someVariable');
   var typedValue = testValue.asSingleColor([1, 2, 3, 4]);
   typedValue.withMipmap();
-  assertEquals(true, typedValue.getShaderVariable().useMipmap_);
-}
+  expectEq(true, typedValue.getShaderVariable().useMipmap_);
+};
 
-function testTexParameteri() {
+/**
+ * Test case testTexParameteri
+ */
+TextureInputValueTest.prototype.testTexParameteri = function() {
   var testValue = new glslunit.testing.UntypedValue(null, 'someVariable');
   var typedValue = testValue.asSingleColor([1, 2, 3, 4]);
   typedValue.texParameteri(42, 33);
-  assertEquals(1, typedValue.getShaderVariable().parameters_.length);
-  assertEquals(42, typedValue.getShaderVariable().parameters_[0].name);
-  assertEquals(33, typedValue.getShaderVariable().parameters_[0].value);
-  assertEquals(false, typedValue.getShaderVariable().parameters_[0].isFloat);
-}
+  expectEq(1, typedValue.getShaderVariable().parameters_.length);
+  expectEq(42, typedValue.getShaderVariable().parameters_[0].name);
+  expectEq(33, typedValue.getShaderVariable().parameters_[0].value);
+  expectEq(false, typedValue.getShaderVariable().parameters_[0].isFloat);
+};
 
-function testTexParameterf() {
+/**
+ * Test case testTexParameterf
+ */
+TextureInputValueTest.prototype.testTexParameterf = function() {
   var testValue = new glslunit.testing.UntypedValue(null, 'someVariable');
   var typedValue = testValue.asSingleColor([1, 2, 3, 4]);
   typedValue.texParameterf(42, 33);
-  assertEquals(1, typedValue.getShaderVariable().parameters_.length);
-  assertEquals(42, typedValue.getShaderVariable().parameters_[0].name);
-  assertEquals(33, typedValue.getShaderVariable().parameters_[0].value);
-  assertEquals(true, typedValue.getShaderVariable().parameters_[0].isFloat);
-}
+  expectEq(1, typedValue.getShaderVariable().parameters_.length);
+  expectEq(42, typedValue.getShaderVariable().parameters_[0].name);
+  expectEq(33, typedValue.getShaderVariable().parameters_[0].value);
+  expectEq(true, typedValue.getShaderVariable().parameters_[0].isFloat);
+};

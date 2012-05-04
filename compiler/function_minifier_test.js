@@ -8,7 +8,17 @@
 goog.require('glslunit.Generator');
 goog.require('glslunit.compiler.FunctionMinifier');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+
+
+/**
+ * Constructor for FunctionMinifierTest
+ * @constructor
+ */
+function FunctionMinifierTest() {
+  setUp();
+}
+registerTestSuite(FunctionMinifierTest);
 
 
 
@@ -30,7 +40,10 @@ function setUp() {
 
 
 
-function testFunctionMinifier() {
+/**
+ * Test case testFunctionMinifier
+ */
+FunctionMinifierTest.prototype.testFunctionMinifier = function() {
   var expectedSource =
     'float a(const int foo,float bar);' +
     'void b(){}' +
@@ -47,7 +60,7 @@ function testFunctionMinifier() {
   var minifier = new glslunit.compiler.FunctionMinifier();
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);
-  assertNotEquals(inputNode, newNode);
-  assertEquals('foo', inputNode.statements[0].parameters[0].name);
-  assertEquals(expectedSource, glslunit.Generator.getSourceCode(newNode));
-}
+  expectNe(inputNode, newNode);
+  expectEq('foo', inputNode.statements[0].parameters[0].name);
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(newNode));
+};

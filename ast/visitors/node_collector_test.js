@@ -19,9 +19,21 @@
 goog.require('glslunit.Generator');
 goog.require('glslunit.NodeCollector');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
 
-function testNodeCollector() {
+/**
+ * Constructor for NodeCollectorTest
+ * @constructor
+ */
+function NodeCollectorTest() {
+}
+registerTestSuite(NodeCollectorTest);
+
+
+
+/**
+ * Test case testNodeCollector
+ */
+NodeCollectorTest.prototype.testNodeCollector = function() {
   var testSource =
     'attribute vec3 foo;' +
     'varying vec2 bar,bbarr;' +
@@ -35,21 +47,21 @@ function testNodeCollector() {
     var result = node.type == 'declarator' &&
         node.typeAttribute.qualifier == 'varying';
     if (result) {
-      assertEquals(1, parentStack.length);
-      assertEquals('root', parentStack[0].type);
+      expectEq(1, parentStack.length);
+      expectEq('root', parentStack[0].type);
     }
     return result;
   });
-  assertEquals(1, cNodes.length);
-  assertEquals('varying vec2 bar,bbarr;',
-               glslunit.Generator.getSourceCode(cNodes[0]));
+  expectEq(1, cNodes.length);
+  expectEq('varying vec2 bar,bbarr;',
+      glslunit.Generator.getSourceCode(cNodes[0]));
   cNodes = glslunit.NodeCollector.collectNodes(testAst,
       function(node, parentStack) {
     var result = node.type == 'declarator_item' &&
         node.name.name == 'meh';
     if (result) {
-      assertEquals(4, parentStack.length);
+      expectEq(4, parentStack.length);
     }
     return result;
   });
-}
+};

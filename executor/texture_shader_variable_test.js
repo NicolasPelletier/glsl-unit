@@ -20,7 +20,17 @@
 goog.require('glslunit.TextureShaderVariable');
 goog.require('goog.testing.LooseMock');
 goog.require('goog.testing.StrictMock');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for TextureShaderVariableTest
+ * @constructor
+ */
+function TextureShaderVariableTest() {
+  setUp();
+}
+registerTestSuite(TextureShaderVariableTest);
+
+
 
 function setUp() {
   var func = function()  {};
@@ -41,7 +51,7 @@ function setUp() {
 /**
  * Tests that attempting to bind a non-texture throws an exception.
  */
-function testBindNonTexture() {
+TextureShaderVariableTest.prototype.testBindNonTexture = function() {
   var varType = 'vec4';
   var texData = {};
 
@@ -55,16 +65,16 @@ function testBindNonTexture() {
     shaderVariable.bindData(null, null);
   } catch (e) {
     exceptionThrown = true;
-    assertEquals('non-texture was bound as a texture, but is a vec4', e);
+    expectEq('non-texture was bound as a texture, but is a vec4', e);
   }
-  assertTrue(exceptionThrown);
-}
+  expectTrue(exceptionThrown);
+};
 
 
 /**
  * Tests that Textures get buffered properly.
  */
-function testBufferTexture() {
+TextureShaderVariableTest.prototype.testBufferTexture = function() {
 
   var varType = 'sampler2D';
   var testLocation = {};
@@ -131,4 +141,4 @@ function testBufferTexture() {
   shaderVariable.bindData(webglMock, null);
   shaderVariable.cleanUp(webglMock);
   webglMock.$verify();
-}
+};

@@ -18,12 +18,24 @@
  */
 
 goog.require('glslunit.testing.GlobalValue');
-goog.require('goog.testing.jsunit');
 
 
 
-function testGlobalExpectedValue() {
-  var expectation = new glslunit.testing.GlobalValue('21.');
-  assertEquals('float', expectation.getValueAst().type);
-  assertEquals(21, expectation.getValueAst().value);
+/**
+ * Constructor for GlobalValueTest
+ * @constructor
+ */
+function GlobalValueTest() {
 }
+registerTestSuite(GlobalValueTest);
+
+
+
+/**
+ * Test case testGlobalExpectedValue
+ */
+GlobalValueTest.prototype.testGlobalExpectedValue = function() {
+  var expectation = new glslunit.testing.GlobalValue('21.');
+  expectEq('float', expectation.getValueAst().type);
+  expectEq(21, expectation.getValueAst().value);
+};

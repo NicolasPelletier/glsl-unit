@@ -8,7 +8,17 @@
 goog.require('glslunit.Generator');
 goog.require('glslunit.compiler.ConstructorMinifier');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+
+
+/**
+ * Constructor for ConstructorMinifierTest
+ * @constructor
+ */
+function ConstructorMinifierTest() {
+  setUp();
+}
+registerTestSuite(ConstructorMinifierTest);
 
 
 
@@ -28,7 +38,10 @@ function setUp() {
 }
 
 
-function testConstructorMinifier() {
+/**
+ * Test case testConstructorMinifier
+ */
+ConstructorMinifierTest.prototype.testConstructorMinifier = function() {
   var expectedSource =
       'vec4 foo=vec4(1.2,2.1,3.+2.,3.001);' +
       'vec4 bar=vec4(1.2,0,3.2,3.001);' +
@@ -44,6 +57,6 @@ function testConstructorMinifier() {
   var minifier = new glslunit.compiler.ConstructorMinifier();
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);
-  assertNotEquals(inputNode, newNode);
-  assertEquals(expectedSource, glslunit.Generator.getSourceCode(newNode));
-}
+  expectNe(inputNode, newNode);
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(newNode));
+};

@@ -20,7 +20,17 @@ goog.require('glslunit.ShaderVariable');
 goog.require('glslunit.VariableScopeVisitor');
 goog.require('glslunit.glsl.parser');
 goog.require('goog.testing.LooseMock');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for GlslShaderVariableTest
+ * @constructor
+ */
+function GlslShaderVariableTest() {
+  setUp();
+}
+registerTestSuite(GlslShaderVariableTest);
+
+
 
 function setUp() {
   var testSource =
@@ -44,12 +54,11 @@ function setUp() {
 /**
  * Tests that attributes get their location correctly.
  */
-function testAttribute() {
+GlslShaderVariableTest.prototype.testAttribute = function() {
   var fooShaderVariable = new glslunit.ShaderVariable('foo');
   fooShaderVariable.setGlobalVariables(rootVariables);
-  assertEquals('foo should be an attribute',
-              glslunit.ShaderVariable.QualifierType.ATTRIBUTE,
-              fooShaderVariable.getQualifierType());
+  expectEq(glslunit.ShaderVariable.QualifierType.ATTRIBUTE,
+      fooShaderVariable.getQualifierType(), 'foo should be an attribute');
 
   var webglMock = new goog.testing.LooseMock(webglContext);
   var testProgram = {};
@@ -60,24 +69,23 @@ function testAttribute() {
   webglMock.$replay();
 
   var result = fooShaderVariable.getLocation(webglMock, testProgram);
-  assertEquals(result, testLocation);
-  assertEquals(false, fooShaderVariable.getIsTexture());
-  assertEquals('float', fooShaderVariable.getTypeName());
+  expectEq(result, testLocation);
+  expectEq(false, fooShaderVariable.getIsTexture());
+  expectEq('float', fooShaderVariable.getTypeName());
   fooShaderVariable.cleanUp(webglMock);
   webglMock.$verify();
-}
+};
 
 
 /**
  * Tests that uniforms get their location correctly.
  */
-function testUniform() {
+GlslShaderVariableTest.prototype.testUniform = function() {
   var barShaderVariable = new glslunit.ShaderVariable('bar');
   barShaderVariable.setGlobalVariables(rootVariables,
                                        {'bar': 'zzz'});
-  assertEquals('bar should be a uniform',
-               glslunit.ShaderVariable.QualifierType.UNIFORM,
-               barShaderVariable.getQualifierType());
+  expectEq(glslunit.ShaderVariable.QualifierType.UNIFORM,
+      barShaderVariable.getQualifierType(), 'bar should be a uniform');
 
   var webglMock = new goog.testing.LooseMock(webglContext);
   var testProgram = {};
@@ -86,22 +94,21 @@ function testUniform() {
   webglMock.$replay();
 
   var result = barShaderVariable.getLocation(webglMock, testProgram);
-  assertEquals(result, testLocation);
+  expectEq(result, testLocation);
 
   webglMock.$verify();
-}
+};
 
 
 /**
  * Tests that varyings get their location correctly.
  */
-function testVarying() {
+GlslShaderVariableTest.prototype.testVarying = function() {
   var razShaderVariable = new glslunit.ShaderVariable('raz');
   razShaderVariable.setGlobalVariables(rootVariables,
                                        {'bar': 'zzz'});
-  assertEquals('raz should be a varying',
-               glslunit.ShaderVariable.QualifierType.VARYING,
-               razShaderVariable.getQualifierType());
+  expectEq(glslunit.ShaderVariable.QualifierType.VARYING,
+      razShaderVariable.getQualifierType(), 'raz should be a varying');
 
   var webglMock = new goog.testing.LooseMock(webglContext);
   var testProgram = {};
@@ -110,17 +117,17 @@ function testVarying() {
   webglMock.$replay();
 
   var result = razShaderVariable.getLocation(webglMock, testProgram);
-  assertEquals(result, testLocation);
+  expectEq(result, testLocation);
 
   webglMock.$verify();
-}
+};
 
 
 /**
  * Tests that the proper exception gets thrown when a shader variable is missing
  * from the global scope.
  */
-function testExceptionOnMising() {
+GlslShaderVariableTest.prototype.testExceptionOnMising = function() {
   var mehShaderVariable = new glslunit.ShaderVariable('meh');
   mehShaderVariable.setGlobalVariables(rootVariables,
                                        {'bar': 'zzz'});
@@ -129,17 +136,17 @@ function testExceptionOnMising() {
     mehShaderVariable.getQualifierType();
   } catch (e) {
     exceptionThrown = true;
-    assertEquals(e, 'meh was not an input variable to the shader program.');
+    expectEq(e, 'meh was not an input variable to the shader program.');
   }
-  assertTrue(exceptionThrown);
-}
+  expectTrue(exceptionThrown);
+};
 
 
 /**
  * Tests that the proper exception gets thrown when a shader variable is a
  * non-input global.
  */
-function testExceptionOnNonInput() {
+GlslShaderVariableTest.prototype.testExceptionOnNonInput = function() {
   var globalShaderVariable = new glslunit.ShaderVariable('global');
   globalShaderVariable.setGlobalVariables(rootVariables,
                                        {'bar': 'zzz'});
@@ -148,7 +155,7 @@ function testExceptionOnNonInput() {
     globalShaderVariable.getQualifierType();
   } catch (e) {
     exceptionThrown = true;
-    assertEquals(e, 'global was not an input variable to the shader program.');
+    expectEq(e, 'global was not an input variable to the shader program.');
   }
-  assertTrue(exceptionThrown);
-}
+  expectTrue(exceptionThrown);
+};

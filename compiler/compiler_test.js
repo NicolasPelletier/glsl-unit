@@ -7,7 +7,17 @@
 
 goog.require('glslunit.compiler.Compiler');
 goog.require('glslunit.compiler.CompilerStep');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for CompilerTest
+ * @constructor
+ */
+function CompilerTest() {
+  setUp();
+}
+registerTestSuite(CompilerTest);
+
+
 
 function setUp() {
   nextExecutionCount = 0;
@@ -15,6 +25,9 @@ function setUp() {
 
 /**
  * A Fake compiler step for testing.
+ * @param {string} name The name of the step.
+ * @param {Array.<string>} dependencies The dependencies.
+ * @constructor
  */
 fakeStepGenerator = function(name, dependencies) {
   this.executionOrder = -1;
@@ -37,14 +50,20 @@ fakeStepGenerator = function(name, dependencies) {
   }
 };
 
-function testNoSteps() {
+/**
+ * Test case testNoSteps
+ */
+CompilerTest.prototype.testNoSteps = function() {
   var shaderProgram = {};
   var compiler = new glslunit.compiler.Compiler(shaderProgram);
-  assertEquals(shaderProgram, compiler.compileProgram());
-}
+  expectEq(shaderProgram, compiler.compileProgram());
+};
 
 
-function testCompilation() {
+/**
+ * Test case testCompilation
+ */
+CompilerTest.prototype.testCompilation = function() {
   var shaderProgram = {};
   var compiler = new glslunit.compiler.Compiler(shaderProgram);
   var opStep = new fakeStepGenerator('opStep1', []);
@@ -56,16 +75,19 @@ function testCompilation() {
                         new opStep.step());
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.OPTIMIZATION,
                         new minStep.step());
-  assertEquals(shaderProgram, compiler.compileProgram());
-  assertEquals(0, opStep.executionOrder);
-  assertEquals(1, opStep.executionCount);
-  assertEquals(1, secondOpStep.executionOrder);
-  assertEquals(1, secondOpStep.executionCount);
-  assertEquals(2, minStep.executionOrder);
-  assertEquals(1, minStep.executionCount);
-}
+  expectEq(shaderProgram, compiler.compileProgram());
+  expectEq(0, opStep.executionOrder);
+  expectEq(1, opStep.executionCount);
+  expectEq(1, secondOpStep.executionOrder);
+  expectEq(1, secondOpStep.executionCount);
+  expectEq(2, minStep.executionOrder);
+  expectEq(1, minStep.executionCount);
+};
 
-function testLoop() {
+/**
+ * Test case testLoop
+ */
+CompilerTest.prototype.testLoop = function() {
   var shaderProgram = {};
   var compiler = new glslunit.compiler.Compiler(shaderProgram);
   var opStep = new fakeStepGenerator('opStep1', ['minStep']);
@@ -79,5 +101,6 @@ function testLoop() {
                         new minStep.step());
   var errorMessage = 'Circular dependcy in compiler steps.  ' +
       'opStep2->opStep1->minStep->opStep2';
-  assertThrows(errorMessage, function() {compiler.compileProgram();});
-}
+  expectThat(function() {compiler.compileProgram()},
+      throwsError(/.?/), errorMessage);
+};

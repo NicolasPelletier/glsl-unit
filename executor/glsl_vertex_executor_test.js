@@ -21,7 +21,16 @@ goog.require('glslunit.ASTVisitor');
 goog.require('glslunit.Generator');
 goog.require('glslunit.VertexExecutor');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for GlslVertexExecutorTest
+ * @constructor
+ */
+function GlslVertexExecutorTest() {
+}
+registerTestSuite(GlslVertexExecutorTest);
+
+
 
 assignmentFinder = function(targetVar) {
   this.assignment = null;
@@ -47,20 +56,20 @@ assignmentFinder.prototype.visitBinary = function(node) {
 /**
  * Tests that the fragment AST can be fetched and is correct.
  */
-function testGetFragmentAst() {
+GlslVertexExecutorTest.prototype.testGetFragmentAst = function() {
   var testExecutor = new glslunit.VertexExecutor(null, null, null, null, null);
   var fragmentAst = testExecutor.getFragmentAst();
   var finder = new assignmentFinder('gl_FragColor');
   finder.visitNode(fragmentAst);
-  assertNotNull('Couldn\'t find gl_FragColor assignment',
-              finder.assignment);
-}
+  expectThat(finder.assignment,
+      not(isNull), "Couldn't find gl_FragColor assignment");
+};
 
 
 /**
  * Tests that the vertex AST is properly instrumented with test code.
  */
-function testGetVertexAst() {
+GlslVertexExecutorTest.prototype.testGetVertexAst = function() {
   var testSource =
     'void main() {' +
     '  someValue = vec(1.0,2.0,3.0,4.0);' +
@@ -73,39 +82,36 @@ function testGetVertexAst() {
                                                  null, null);
 
   var transformedAst = testExecutor.getVertexAst(extractionAst);
-  assertEquals('Orignal shouldn\'t have been transformed',
-               1, testAst.statements.length);
+  expectEq(1,
+      testAst.statements.length, "Orignal shouldn't have been transformed");
 
-  assertEquals('Encoding code not added',
-               'upper_mask', transformedAst.statements[2].name);
+  expectEq('upper_mask',
+      transformedAst.statements[2].name, 'Encoding code not added');
 
   var finder = new assignmentFinder('gl_Position');
   finder.visitNode(transformedAst);
-  assertNotNull('Couldn\'t find gl_Position assignment',
-              finder.assignment);
+  expectThat(finder.assignment,
+      not(isNull), "Couldn't find gl_Position assignment");
 
   finder = new assignmentFinder('vResultColor');
   finder.visitNode(transformedAst);
-  assertEquals('Result set to wrong value',
-               'encodeFloat',
-               finder.assignment.function_name);
-  assertEquals('Result set to wrong value',
-               1,
-               finder.assignment.parameters.length);
-  assertEquals('Result set to wrong value',
-               'function_call',
-               finder.assignment.parameters[0].type);
-  assertEquals('Result set to wrong value',
-               'postfix',
-               finder.assignment.parameters[0].parameters[0].type);
+  expectEq('encodeFloat',
+      finder.assignment.function_name, 'Result set to wrong value');
+  expectEq(1,
+      finder.assignment.parameters.length, 'Result set to wrong value');
+  expectEq('function_call',
+      finder.assignment.parameters[0].type, 'Result set to wrong value');
+  expectEq('postfix',
+      finder.assignment.parameters[0].parameters[0].type,
+          'Result set to wrong value');
   var resultSource = glslunit.Generator.getSourceCode(transformedAst);
-  assertNotEquals(-1, resultSource.search('__testMain'));
-}
+  expectNe(-1, resultSource.search('_testMain_'));
+};
 
 /**
  * Tests that the vertex AST is properly instrumented with test code.
  */
-function testNoMainFunction() {
+GlslVertexExecutorTest.prototype.testNoMainFunction = function() {
   var testSource = 'attribute vec4 someAttr;';
   var testAst = glslunit.glsl.parser.parse(testSource);
   var testExecutor = new glslunit.VertexExecutor(null, testAst, null,
@@ -115,5 +121,5 @@ function testNoMainFunction() {
                                                  'assignment_expression');
   var transformedAst = testExecutor.getVertexAst(extractionAst);
   var resultSource = glslunit.Generator.getSourceCode(transformedAst);
-  assertEquals(-1, resultSource.search('__testMain'));
-}
+  expectEq(-1, resultSource.search('_testMain_'));
+};

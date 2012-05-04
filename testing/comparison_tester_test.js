@@ -20,90 +20,113 @@
 goog.require('glslunit.Generator');
 goog.require('glslunit.glsl.parser');
 goog.require('glslunit.testing.ComparisonTester');
-goog.require('goog.testing.jsunit');
 
 
 
-function testScalarNotEqual() {
+/**
+ * Constructor for ComparisonTesterTest
+ * @constructor
+ */
+function ComparisonTesterTest() {
+}
+registerTestSuite(ComparisonTesterTest);
+
+
+
+/**
+ * Test case testScalarNotEqual
+ */
+ComparisonTesterTest.prototype.testScalarNotEqual = function() {
   var testAst = glslunit.glsl.parser.parse('42.', 'assignment_expression');
   var testOperation = new glslunit.testing.ComparisonTester();
 
   testOperation.notEqual(33).withEpsilonOf(3);
-  assertEquals(33, testOperation.getValues());
-  assertEquals('!(abs(42.-33.)<=3.)',
-               glslunit.Generator.getSourceCode(
-                   testOperation.getTestAstNode(testAst)));
-}
+  expectEq(33, testOperation.getValues());
+  expectEq('!(abs(42.-33.)<=3.)',
+      glslunit.Generator.getSourceCode(testOperation.getTestAstNode(testAst)));
+};
 
-function testScalarEqual() {
+/**
+ * Test case testScalarEqual
+ */
+ComparisonTesterTest.prototype.testScalarEqual = function() {
   var testAst = glslunit.glsl.parser.parse('42.', 'assignment_expression');
   var testOperation = new glslunit.testing.ComparisonTester();
 
   testOperation.equal(33).withEpsilonOf(3);
-  assertEquals('abs(42.-33.)<=3.',
-               glslunit.Generator.getSourceCode(
-                   testOperation.getTestAstNode(testAst)));
-}
+  expectEq('abs(42.-33.)<=3.',
+      glslunit.Generator.getSourceCode(testOperation.getTestAstNode(testAst)));
+};
 
 
-function testScalarLessThan() {
+/**
+ * Test case testScalarLessThan
+ */
+ComparisonTesterTest.prototype.testScalarLessThan = function() {
   var testAst = glslunit.glsl.parser.parse('42.', 'assignment_expression');
   var testOperation = new glslunit.testing.ComparisonTester();
 
   testOperation.lessThan(33).withEpsilonOf(12);
-  assertEquals('42.-12.<33.',
-               glslunit.Generator.getSourceCode(
-                   testOperation.getTestAstNode(testAst)));
-}
+  expectEq('42.-12.<33.',
+      glslunit.Generator.getSourceCode(testOperation.getTestAstNode(testAst)));
+};
 
-function testScalarGreaterThanEqual() {
+/**
+ * Test case testScalarGreaterThanEqual
+ */
+ComparisonTesterTest.prototype.testScalarGreaterThanEqual = function() {
   var testAst = glslunit.glsl.parser.parse('42.', 'assignment_expression');
   var testOperation = new glslunit.testing.ComparisonTester();
 
   testOperation.greaterThanEqual(33).withEpsilonOf(12);
-  assertEquals('42.+12.>=33.',
-               glslunit.Generator.getSourceCode(
-                   testOperation.getTestAstNode(testAst)));
-}
+  expectEq('42.+12.>=33.',
+      glslunit.Generator.getSourceCode(testOperation.getTestAstNode(testAst)));
+};
 
 
-function testVectorNotEqual() {
+/**
+ * Test case testVectorNotEqual
+ */
+ComparisonTesterTest.prototype.testVectorNotEqual = function() {
   var testAst = glslunit.glsl.parser.parse('vec2(42., 33.)',
                                            'assignment_expression');
   var testOperation = new glslunit.testing.ComparisonTester();
 
   testOperation.notEqual([55, 21]).withEpsilonOf(1);
 
-  assertEquals('!=', testOperation.getOperator());
-  assertEquals(1, testOperation.getEpsilon());
-  assertTrue(goog.array.equals([55, 21], testOperation.getValues()));
-  assertEquals('!all(lessThanEqual(abs(vec2(42.,33.)-vec2(55.,21.)),' +
-                                  'vec2(1.,1.)))',
-               glslunit.Generator.getSourceCode(
-               testOperation.getTestAstNode(testAst)));
-}
+  expectEq('!=', testOperation.getOperator());
+  expectEq(1, testOperation.getEpsilon());
+  expectTrue(goog.array.equals([55, 21], testOperation.getValues()));
+  expectEq('!all(lessThanEqual(abs(vec2(42.,33.)-vec2(55.,21.)),' +
+                               'vec2(1.,1.)))',
+      glslunit.Generator.getSourceCode(testOperation.getTestAstNode(testAst)));
+};
 
 
-function testVectorEqual() {
+/**
+ * Test case testVectorEqual
+ */
+ComparisonTesterTest.prototype.testVectorEqual = function() {
   var testAst = glslunit.glsl.parser.parse('vec2(42., 33.)',
                                            'assignment_expression');
   var testOperation = new glslunit.testing.ComparisonTester();
 
   testOperation.any().equal([55, 21]).withEpsilonOf(1);
-  assertEquals('any(lessThanEqual(abs(vec2(42.,33.)-vec2(55.,21.)),' +
-                                  'vec2(1.,1.)))',
-               glslunit.Generator.getSourceCode(
-                   testOperation.getTestAstNode(testAst)));
-}
+  expectEq('any(lessThanEqual(abs(vec2(42.,33.)-vec2(55.,21.)),' +
+                              'vec2(1.,1.)))',
+      glslunit.Generator.getSourceCode(testOperation.getTestAstNode(testAst)));
+};
 
 
-function testVectorLessThanEqual() {
+/**
+ * Test case testVectorLessThanEqual
+ */
+ComparisonTesterTest.prototype.testVectorLessThanEqual = function() {
   var testAst = glslunit.glsl.parser.parse('vec2(42., 33.)',
                                            'assignment_expression');
   var testOperation = new glslunit.testing.ComparisonTester();
 
   testOperation.all().lessThanEqual([55, 21]).withEpsilonOf(1);
-  assertEquals('all(lessThanEqual(vec2(42.,33.)-1.,vec2(55.,21.)))',
-               glslunit.Generator.getSourceCode(
-                   testOperation.getTestAstNode(testAst)));
-}
+  expectEq('all(lessThanEqual(vec2(42.,33.)-1.,vec2(55.,21.)))',
+      glslunit.Generator.getSourceCode(testOperation.getTestAstNode(testAst)));
+};

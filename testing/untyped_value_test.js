@@ -18,76 +18,98 @@
 
 goog.require('glslunit.testing.UntypedValue');
 goog.require('goog.array');
-goog.require('goog.testing.jsunit');
 
 
-function testAsArray() {
+/**
+ * Constructor for UntypedValueTest
+ * @constructor
+ */
+function UntypedValueTest() {
+}
+registerTestSuite(UntypedValueTest);
+
+
+
+/**
+ * Test case testAsArray
+ */
+UntypedValueTest.prototype.testAsArray = function() {
   var testValue = new glslunit.testing.UntypedValue('someVariable');
   var typedValue = testValue.asArray([1, 2, 3, 4]);
-  assertEquals('someVariable', testValue.getShaderVariable().name_);
-  assertTrue(goog.array.equals(testValue.getShaderVariable().values_,
+  expectEq('someVariable', testValue.getShaderVariable().name_);
+  expectTrue(goog.array.equals(testValue.getShaderVariable().values_,
                                [1, 2, 3, 4]));
-}
+};
 
-function testAsIdentityMatrix() {
+/**
+ * Test case testAsIdentityMatrix
+ */
+UntypedValueTest.prototype.testAsIdentityMatrix = function() {
   var testValue = new glslunit.testing.UntypedValue('someVariable');
   var typedValue = testValue.asIdentityMatrix();
-  assertEquals('someVariable', testValue.getShaderVariable().name_);
-  assertTrue(goog.array.equals(testValue.getShaderVariable().values_,
+  expectEq('someVariable', testValue.getShaderVariable().name_);
+  expectTrue(goog.array.equals(testValue.getShaderVariable().values_,
                                [1, 0, 0, 0,
                                 0, 1, 0, 0,
                                 0, 0, 1, 0,
                                 0, 0, 0, 1]));
-}
+};
 
 
-function testSingleColor() {
+/**
+ * Test case testSingleColor
+ */
+UntypedValueTest.prototype.testSingleColor = function() {
   var testValue = new glslunit.testing.UntypedValue('someVariable');
   var typedValue = testValue.asSingleColor([1, 2, 3, 4]);
-  assertEquals('someVariable', testValue.getShaderVariable().name_);
-  assertTrue(goog.array.equals(testValue.getShaderVariable().data_,
+  expectEq('someVariable', testValue.getShaderVariable().name_);
+  expectTrue(goog.array.equals(testValue.getShaderVariable().data_,
                                [1, 2, 3, 4]));
 
   var errorMessage = 'Error while creating a Single Color for someVariable: ' +
       'Expected 4 components but found 3 components.';
-  assertThrows(errorMessage, function() {
-    testValue.asSingleColor([1, 2, 3]);
-  });
-}
+  expectThat(function() {testValue.asSingleColor([1, 2, 3])},
+      throwsError(/.?/), errorMessage);
+};
 
 
-function test2DTexture() {
+/**
+ * Test case test2DTexture
+ */
+UntypedValueTest.prototype.test2DTexture = function() {
   var testValue = new glslunit.testing.UntypedValue('someVariable');
   var inputData = [1, 2, 3, 4,
                    5, 6, 7, 8,
                    9, 1, 2, 3];
   var typedValue = testValue.as2DTexture(inputData, 3, 1);
-  assertEquals('someVariable', testValue.getShaderVariable().name_);
-  assertTrue(goog.array.equals(testValue.getShaderVariable().data_,
-                               inputData));
-  assertEquals(testValue.getShaderVariable().height_, 3);
-  assertEquals(testValue.getShaderVariable().width_, 1);
+  expectEq('someVariable', testValue.getShaderVariable().name_);
+  expectTrue(goog.array.equals(testValue.getShaderVariable().data_, inputData));
+  expectEq(testValue.getShaderVariable().height_, 3);
+  expectEq(testValue.getShaderVariable().width_, 1);
 
   var errorMessage = 'Error while creating a Single Color for someVariable: ' +
       'Expected 12 components but found 4 components.';
-  assertThrows(errorMessage, function() {
-    testValue.as2DTexture([1, 2, 3, 4], 3, 1);
-  });
-}
+  expectThat(function() {testValue.as2DTexture([1, 2, 3, 4], 3, 1)},
+      throwsError(/.?/), errorMessage);
+};
 
 
-function testAsNumber() {
+/**
+ * Test case testAsNumber
+ */
+UntypedValueTest.prototype.testAsNumber = function() {
   var testValue = new glslunit.testing.UntypedValue('anotherVariable');
   var typedValue = testValue.asNumber(42);
-  assertEquals('anotherVariable', testValue.getShaderVariable().name_);
-  assertTrue(goog.array.equals(testValue.getShaderVariable().values_,
-                               [42]));
-}
+  expectEq('anotherVariable', testValue.getShaderVariable().name_);
+  expectTrue(goog.array.equals(testValue.getShaderVariable().values_, [42]));
+};
 
-function testAsBoolean() {
+/**
+ * Test case testAsBoolean
+ */
+UntypedValueTest.prototype.testAsBoolean = function() {
   var testValue = new glslunit.testing.UntypedValue('someOtherVariable');
   var typedValue = testValue.asBoolean(false);
-  assertEquals('someOtherVariable', testValue.getShaderVariable().name_);
-  assertTrue(goog.array.equals(testValue.getShaderVariable().values_,
-                               [0]));
-}
+  expectEq('someOtherVariable', testValue.getShaderVariable().name_);
+  expectTrue(goog.array.equals(testValue.getShaderVariable().values_, [0]));
+};

@@ -9,7 +9,17 @@ goog.require('glslunit.Generator');
 goog.require('glslunit.compiler.ShaderProgram');
 goog.require('glslunit.compiler.VariableMinifier');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+
+/**
+ * Constructor for VariableMinifierTest
+ * @constructor
+ */
+function VariableMinifierTest() {
+  setUp();
+}
+registerTestSuite(VariableMinifierTest);
+
 
 
 /**
@@ -59,7 +69,10 @@ function setUp() {
 
 
 
-function testVariableMinifier() {
+/**
+ * Test case testVariableMinifier
+ */
+VariableMinifierTest.prototype.testVariableMinifier = function() {
   var expectedVertex =
     'float someMethod(const int e,float f);' +
     'struct someStruct{' +
@@ -93,18 +106,20 @@ function testVariableMinifier() {
   var fragmentAst = glslunit.glsl.parser.parse(fragmentSource);
 
   var vertexResult = minifier.transformNode(vertexAst);
-  assertEquals(expectedVertex,
-               glslunit.Generator.getSourceCode(vertexResult));
+  expectEq(expectedVertex, glslunit.Generator.getSourceCode(vertexResult));
 
   var renamer = minifier.currentNameGenerator_;
   minifier = new glslunit.compiler.VariableMinifier(true);
   minifier.currentNameGenerator_ = renamer;
   var fragmentResult = minifier.transformNode(fragmentAst);
-  assertEquals(expectedFragment,
-               glslunit.Generator.getSourceCode(fragmentResult));
-}
+  expectEq(expectedFragment,
+      glslunit.Generator.getSourceCode(fragmentResult));
+};
 
-function testVariableMinifierNoMinifyPublic() {
+/**
+ * Test case testVariableMinifierNoMinifyPublic
+ */
+VariableMinifierTest.prototype.testVariableMinifierNoMinifyPublic = function() {
   var expectedVertex =
     'float someMethod(const int b,float c);' +
     'struct someStruct{' +
@@ -138,13 +153,12 @@ function testVariableMinifierNoMinifyPublic() {
   var fragmentAst = glslunit.glsl.parser.parse(fragmentSource);
 
   var vertexResult = minifier.transformNode(vertexAst);
-  assertEquals(expectedVertex,
-               glslunit.Generator.getSourceCode(vertexResult));
+  expectEq(expectedVertex, glslunit.Generator.getSourceCode(vertexResult));
 
   var renamer = minifier.currentNameGenerator_;
   minifier = new glslunit.compiler.VariableMinifier(false);
   minifier.currentNameGenerator_ = renamer;
   var fragmentResult = minifier.transformNode(fragmentAst);
-  assertEquals(expectedFragment,
-               glslunit.Generator.getSourceCode(fragmentResult));
-}
+  expectEq(expectedFragment,
+      glslunit.Generator.getSourceCode(fragmentResult));
+};

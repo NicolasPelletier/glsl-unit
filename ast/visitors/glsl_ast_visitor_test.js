@@ -17,6 +17,16 @@ goog.require('goog.structs.Set');
 
 
 /**
+ * Constructor for GlslAstVisitorTest
+ * @constructor
+ */
+function GlslAstVisitorTest() {
+}
+registerTestSuite(GlslAstVisitorTest);
+
+
+
+/**
  * Test Visitor
  * @constructor
  * @extends {glslunit.ASTVisitor}
@@ -39,7 +49,10 @@ glslunit.TestASTVisitor.prototype.visitInt = function(node) {
 };
 
 
-function testFindInts() {
+/**
+ * Test case testFindInts
+ */
+GlslAstVisitorTest.prototype.testFindInts = function() {
   var testNode = {
     type: 'root',
     statements: [
@@ -81,6 +94,6 @@ function testFindInts() {
   };
   var testVisitor = new glslunit.TestASTVisitor();
   testVisitor.visitNode(testNode);
-  assertTrue(testVisitor.nodes_found.contains(2));
-  assertTrue(testVisitor.nodes_found.contains(4));
-}
+  expectTrue(testVisitor.nodes_found.contains(2));
+  expectTrue(testVisitor.nodes_found.contains(4));
+};

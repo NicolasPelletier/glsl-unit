@@ -15,9 +15,21 @@
 goog.require('glslunit.CallGraphVisitor');
 goog.require('glslunit.glsl.parser');
 goog.require('goog.array');
-goog.require('goog.testing.jsunit');
 
-function testCallGraphVisitor() {
+/**
+ * Constructor for CallGraphVisitorTest
+ * @constructor
+ */
+function CallGraphVisitorTest() {
+}
+registerTestSuite(CallGraphVisitorTest);
+
+
+
+/**
+ * Test case testCallGraphVisitor
+ */
+CallGraphVisitorTest.prototype.testCallGraphVisitor = function() {
   var inputSource =
     'vec3 foo();' +
     'vec4 bar() {' +
@@ -34,8 +46,8 @@ function testCallGraphVisitor() {
     '}';
   var callGraph = glslunit.CallGraphVisitor.getCallGraph(
       glslunit.glsl.parser.parse(inputSource));
-  assertTrue(goog.array.equals(['bar', 'callsNothing'], callGraph['foo']));
-  assertTrue(goog.array.equals([], callGraph['callsNothing']));
-  assertTrue(goog.array.equals(['bar'], callGraph['uncalled']));
-  assertTrue(goog.array.equals(['foo'], callGraph['bar']));
-}
+  expectTrue(goog.array.equals(['bar', 'callsNothing'], callGraph['foo']));
+  expectTrue(goog.array.equals([], callGraph['callsNothing']));
+  expectTrue(goog.array.equals(['bar'], callGraph['uncalled']));
+  expectTrue(goog.array.equals(['foo'], callGraph['bar']));
+};

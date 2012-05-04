@@ -38,10 +38,12 @@ glslunit.utils.getFunctionSuffix = function(typeName) {
  * @param {string} input The input to be reformatted.
  * @param {boolean} initialUpper Whether or not to leave the first letter of the
  *     result capitalized.
+ * @param {RegExp=} splitRegex The regex to use when splitting input.
  * @return {string} The suffix for method calls on this type.
  */
-glslunit.utils.toTitleOrCamelCase = function(input, initialUpper) {
-  var result = input.split('_').map(function(x) {
+glslunit.utils.toTitleOrCamelCase = function(input, initialUpper, splitRegex) {
+  var splitter = splitRegex || /_/g;
+  var result = input.split(splitter).map(function(x) {
     return x.slice(0, 1).toUpperCase() + x.slice(1).toLowerCase();
   }).join('');
   if (!initialUpper) {

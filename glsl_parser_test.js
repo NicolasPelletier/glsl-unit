@@ -19,14 +19,24 @@ goog.require('glslunit.Generator');
 goog.require('glslunit.glsl.parser');
 goog.require('goog.array');
 
+/**
+ * Constructor for GlslParserTest
+ * @constructor
+ */
+function GlslParserTest() {
+  setUp();
+}
+registerTestSuite(GlslParserTest);
+
+
+
 function setUp() {
   parser = glslunit.glsl.parser;
 }
 
 function roundTripTest(testSource, startRule) {
-  assertEquals(testSource,
-               glslunit.Generator.getSourceCode(parser.parse(testSource,
-                                                             startRule)));
+  expectEq(testSource,
+      glslunit.Generator.getSourceCode(parser.parse(testSource, startRule)));
 }
 
 function throwsExceptionTest(testSource, failMessage, shaderType) {
@@ -36,21 +46,27 @@ function throwsExceptionTest(testSource, failMessage, shaderType) {
   } catch (e) {
     threwException = true;
   }
-  assertEquals(failMessage, true, threwException);
+  expectEq(true, threwException, failMessage);
 }
 
-function testEmptyFunction() {
+/**
+ * Test case testEmptyFunction
+ */
+GlslParserTest.prototype.testEmptyFunction = function() {
   roundTripTest('void main(){}');
-}
+};
 
-function testPreprocessor() {
+/**
+ * Test case testPreprocessor
+ */
+GlslParserTest.prototype.testPreprocessor = function() {
   var directives = ['define', 'undef', 'pragma', 'version', 'error',
                     'extension', 'line'];
   goog.array.forEach(directives, function(directive) {
                        var testSource = '#' + directive + ' something';
-                       assertEquals(testSource + '\n',
-                                    glslunit.Generator.getSourceCode(
-                                        parser.parse(testSource)));
+                       expectEq(testSource + '\n',
+                           glslunit.Generator.getSourceCode(
+                               parser.parse(testSource)));
                      });
   directives = ['ifdef', 'ifndef', 'if'];
   goog.array.forEach(directives, function(directive) {
@@ -61,9 +77,9 @@ function testPreprocessor() {
                                        '#else\n' +
                                        'void elseMain(){}\n' +
                                        '#endif';
-                       assertEquals(testSource + '\n',
-                                    glslunit.Generator.getSourceCode(
-                                        parser.parse(testSource)));
+                       expectEq(testSource + '\n',
+                           glslunit.Generator.getSourceCode(
+                               parser.parse(testSource)));
                     });
   var testSource = '#define FOO\n' +
                    'void main(){}\n' +
@@ -74,9 +90,12 @@ function testPreprocessor() {
                'void main(){}\n';
   throwsExceptionTest(testSource,
                       'Parser should throw exception on #ifdef without #endif');
-}
+};
 
-function testAttributeDeclaration() {
+/**
+ * Test case testAttributeDeclaration
+ */
+GlslParserTest.prototype.testAttributeDeclaration = function() {
   roundTripTest('attribute vec2 something;', 'vertex_start');
   roundTripTest('attribute vec3 something,somethingElse;', 'vertex_start');
   throwsExceptionTest('attribute vec2 something;',
@@ -89,9 +108,12 @@ function testAttributeDeclaration() {
   throwsExceptionTest('attribute float problems[99];',
                       'Should not be able to declare attribute arrays',
                       'vertex_start');
-}
+};
 
-function testFullySpecifiedType() {
+/**
+ * Test case testFullySpecifiedType
+ */
+GlslParserTest.prototype.testFullySpecifiedType = function() {
   var typeQualifiers = ['', 'const ', 'varying ',
                         'invariant varying ', 'uniform '];
   goog.array.forEach(typeQualifiers, function(typeQualifier) {
@@ -101,9 +123,12 @@ function testFullySpecifiedType() {
   });
   throwsExceptionTest('void main(){varying float not_me;}',
                       'Local types should not be able to have qualifiers');
-}
+};
 
-function testFunctionPrototype() {
+/**
+ * Test case testFunctionPrototype
+ */
+GlslParserTest.prototype.testFunctionPrototype = function() {
   roundTripTest('void func();');
   roundTripTest('highp mat3 func();');
   roundTripTest('float func(mat4 a,bool b);');
@@ -113,9 +138,12 @@ function testFunctionPrototype() {
                       'Only in arguments can be declared const');
   throwsExceptionTest('void func(varying out float a);',
                       'Function Parameters can\'t have qualifiers');
-}
+};
 
-function testLocallySpecifiedType() {
+/**
+ * Test case testLocallySpecifiedType
+ */
+GlslParserTest.prototype.testLocallySpecifiedType = function() {
   roundTripTest('void main(){int x;}');
   roundTripTest('void main(){int x[1];}');
   roundTripTest('void main(){const highp int x[],y;}');
@@ -123,9 +151,12 @@ function testLocallySpecifiedType() {
                       'Types can\'t be declared as void');
   throwsExceptionTest('void main(){int lowp;}',
                       'Variables can\'t have reserved names');
-}
+};
 
-function testStruct() {
+/**
+ * Test case testStruct
+ */
+GlslParserTest.prototype.testStruct = function() {
   roundTripTest('struct{int x;};');
   roundTripTest('varying struct{int x[1],y;};');
   roundTripTest('struct s{int x;highp float y;};');
@@ -135,79 +166,102 @@ function testStruct() {
                       'Arrays in structs must have a size');
   throwsExceptionTest('struct{int x;struct {int y;}a;};',
                       'Structs can\'t be embedded in structs');
-}
+};
 
-function testIntConstant() {
+/**
+ * Test case testIntConstant
+ */
+GlslParserTest.prototype.testIntConstant = function() {
   var testSource = 'int x=128;';
   roundTripTest(testSource);
-  assertEquals(testSource,
-               glslunit.Generator.getSourceCode(parser.parse('int x=0x80;')));
-  assertEquals(testSource,
-               glslunit.Generator.getSourceCode(parser.parse('int x=0200;')));
+  expectEq(testSource,
+      glslunit.Generator.getSourceCode(parser.parse('int x=0x80;')));
+  expectEq(testSource,
+      glslunit.Generator.getSourceCode(parser.parse('int x=0200;')));
   roundTripTest('int x=0;');
-}
+};
 
-function testFloatConstant() {
+/**
+ * Test case testFloatConstant
+ */
+GlslParserTest.prototype.testFloatConstant = function() {
   roundTripTest('float x=12.8;');
   roundTripTest('float x=1.28e23;');
   roundTripTest('float x=1.28e-23;');
   roundTripTest('float x=1e23;');
-}
+};
 
-function testBoolConstant() {
+/**
+ * Test case testBoolConstant
+ */
+GlslParserTest.prototype.testBoolConstant = function() {
   roundTripTest('bool b=false;');
   roundTripTest('bool b=true;');
-}
+};
 
-function testPostfix() {
+/**
+ * Test case testPostfix
+ */
+GlslParserTest.prototype.testPostfix = function() {
   roundTripTest('x[1]', 'condition');
   roundTripTest('x.xyz', 'condition');
   roundTripTest('x[1].xyz[1]', 'condition');
   roundTripTest('x++', 'condition');
-  assertEquals('x++',
-    glslunit.Generator.getSourceCode(parser.parse('x ++',
-                                                  'condition')));
+  expectEq('x++',
+      glslunit.Generator.getSourceCode(parser.parse('x ++', 'condition')));
   roundTripTest('x--', 'condition');
   roundTripTest('x[1].xyz[1]++', 'condition');
   roundTripTest('x[1]++.rgba', 'condition');
   throwsExceptionTest('x++++', '++/-- can\'t repeat', 'condition');
   throwsExceptionTest('x++--', '++/-- can\'t repeat', 'condition');
-}
+};
 
-function testUnary() {
+/**
+ * Test case testUnary
+ */
+GlslParserTest.prototype.testUnary = function() {
   var expressions = ['-', '+', '++', '--', '!', '~'];
   goog.array.forEach(expressions, function(expression) {
     var testCode = expression + 'x';
     roundTripTest(testCode, 'condition');
     var node = parser.parse(testCode, 'condition');
-    assertEquals('unary', node.type);
+    expectEq('unary', node.type);
     // Check to make sure we parsed properly.  This checks that --/++ get parsed
     // properly instead of as two separate +'s or -'s
-    assertEquals(expression, node.operator.operator);
-    assertEquals('identifier', node.expression.type);
+    expectEq(expression, node.operator.operator);
+    expectEq('identifier', node.expression.type);
   });
-}
+};
 
-function testBinary() {
+/**
+ * Test case testBinary
+ */
+GlslParserTest.prototype.testBinary = function() {
   var operators = ['*', '/', '%', '+', '-', '<<', '>>', '<', '>', '<=', '==',
                    '>=', '!=', '&', '^', '|', '&&', '||'];
   goog.array.forEach(operators, function(operator) {
     var testCode = 'x' + operator + 'y';
     roundTripTest(testCode, 'condition');
     var node = parser.parse(testCode, 'condition');
-    assertEquals('binary', node.type);
-    assertEquals(operator, node.operator.operator);
-    assertEquals('x', node.left.name);
-    assertEquals('y', node.right.name);
+    expectEq('binary', node.type);
+    expectEq(operator, node.operator.operator);
+    expectEq('x', node.left.name);
+    expectEq('y', node.right.name);
   });
   roundTripTest('(x+y)*9', 'condition');
-}
+};
 
-function testFunctionCall() {
+/**
+ * Test case testFunctionCall
+ */
+GlslParserTest.prototype.testFunctionCall = function() {
   roundTripTest('void main(){func(a,b,c);}');
-}
+};
 
-function testWhiteSpaceFunction() {
+/**
+ * Test case testWhiteSpaceFunction
+ */
+GlslParserTest.prototype.testWhiteSpaceFunction = function() {
   var testSource = '\n' +
     'precision highp float;\n' +
     'attribute vec4 aOutput;\n' +
@@ -229,6 +283,6 @@ function testWhiteSpaceFunction() {
     'float someFunc(){' +
     'return 42.;' +
     '}';
-  assertEquals(goldenSource,
-               glslunit.Generator.getSourceCode(parser.parse(testSource)));
-}
+  expectEq(goldenSource,
+      glslunit.Generator.getSourceCode(parser.parse(testSource)));
+};

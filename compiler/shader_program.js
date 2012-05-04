@@ -6,13 +6,40 @@
  * @author rowillia@google.com (Roy Williams)
  */
 
-goog.provide('glslunit.compiler.JsConst');
 goog.provide('glslunit.compiler.ShaderAttributeEntry');
+goog.provide('glslunit.compiler.ShaderJsConst');
 goog.provide('glslunit.compiler.ShaderMode');
 goog.provide('glslunit.compiler.ShaderProgram');
 goog.provide('glslunit.compiler.ShaderUniformEntry');
 
 goog.require('glslunit.Generator');
+goog.require('goog.array');
+goog.require('goog.object');
+
+
+/**
+ * Structure for shader modes.
+ * @constructor
+ */
+glslunit.compiler.ShaderJsConst = function() {
+  /**
+   * The original name of the preprocessor directive for this constant.
+   * @type {string}
+   */
+  this.originalName = '';
+
+  /**
+   * The shortened name for the preprocessor directive for this constant.
+   * @type {string}
+   */
+  this.shortName = '';
+
+  /**
+   * The Javascript expression to set this constant to.
+   * @type {string}
+   */
+  this.expression = '';
+};
 
 
 
@@ -41,35 +68,15 @@ glslunit.compiler.ShaderMode = function() {
 };
 
 
-
 /**
- * Variant of a shader program.
- * @constructor
+ * Clones a ShaderMode
+ * @return {glslunit.compiler.ShaderMode} A clone of this ShaderMode.
  */
-glslunit.compiler.ShaderVariant = function() {
-  /**
-   * The name of this variant.
-   * @type {string}
-   */
-  this.name = '';
-
-  /**
-   * The set values of modes for this variant.
-   * @type {Array.<!{name: string, value: number}>}
-   */
-  this.modeSettings = [];
-
-  /**
-   * The source code for the fragment shader for this variant.
-   * @type {!Object}
-   */
-  this.fragmentAst = {};
-
-  /**
-   * The source code for the vertex shader for this variant.
-   * @type {!Object}
-   */
-  this.vertexAst = {};
+glslunit.compiler.ShaderMode.prototype.clone = function() {
+  var result = /** @type {glslunit.compiler.ShaderMode} */ (
+      goog.object.clone(this));
+  result.options = goog.array.clone(this.options);
+  return result;
 };
 
 
@@ -101,13 +108,25 @@ glslunit.compiler.ShaderAttributeEntry = function() {
    * The offset of this attribute declaration in the compiled source code.
    * @type {number}
    */
-  this.sourceOffset = 0;
+  this.compiledSourceOffset = 0;
 
   /**
    * The size of the declaration of the attribute in the compiled source code.
    * @type {number}
    */
-  this.sourceSize = 0;
+  this.compiledSourceSize = 0;
+
+ /**
+  * The offset of this attribute declaration in the debug source code.
+  * @type {number}
+  */
+ this.debugSourceOffset = 0;
+
+ /**
+  * The size of the declaration of the attribute in the debug source code.
+  * @type {number}
+  */
+ this.debugSourceSize = 0;
 };
 
 
@@ -168,6 +187,12 @@ glslunit.compiler.ShaderProgram = function() {
   this.namespace = '';
 
   /**
+   * Array of license comments
+   * @type {!Array.<string>}
+   */
+  this.licenses = [];
+
+  /**
    * Array of required javascript classes.
    * @type {!Array.<string>}
    */
@@ -175,7 +200,7 @@ glslunit.compiler.ShaderProgram = function() {
 
   /**
    * Array of required javascript classes.
-   * @type {!Array.<{value: string, expression: string}>}
+   * @type {!Array.<glslunit.compiler.ShaderJsConst>}
    */
   this.jsConsts = [];
 
@@ -234,6 +259,34 @@ glslunit.compiler.ShaderProgram = function() {
    * @type {!Object}
    */
   this.vertexAst = {};
+
+  /**
+   * The set of files that have been included in this shader program.
+   * @type {!Object.<string, boolean>}
+   */
+  this.includedFiles = {};
+};
+
+
+/**
+ * Clones a ShaderProgram
+ * @return {glslunit.compiler.ShaderProgram} A clone of this ShaderProgram.
+ */
+glslunit.compiler.ShaderProgram.prototype.clone = function() {
+  var result = /** @type {glslunit.compiler.ShaderProgram} */ (
+      goog.object.clone(this));
+  result.attributeMap = goog.object.clone(this.attributeMap);
+  result.uniformMap = goog.object.clone(this.uniformMap);
+  result.templateProperties = goog.object.clone(this.templateProperties);
+  result.jsRequires = goog.array.clone(this.jsRequires);
+  result.includedFiles = goog.object.clone(this.includedFiles);
+  result.jsConsts = this.jsConsts.map(function(x) {
+    return goog.object.clone(x);
+  });
+  result.shaderModes = this.shaderModes.map(function(x) {
+    return x.clone();
+  });
+  return result;
 };
 
 
@@ -264,6 +317,18 @@ glslunit.compiler.ShaderProgram.prototype.getFragmentSource = function(
 
 
 /**
+ * Escapes a string to be used in a shader template.
+ * @param {string} inputString The string to escape.
+ * @param {string=} opt_newline The string to use for line breaks.
+ * @return {string} The safely escaped string.
+ */
+glslunit.compiler.ShaderProgram.escapeString = function(inputString,
+      opt_newline) {
+  return inputString.replace(/\n/g, opt_newline || '\\n').replace(/'/g, '\\\'');
+};
+
+
+/**
  * Gets the original, unoptimized fragment source code.
  * @param {string=} opt_newline The string to use for line breaks.
  * @return {string} The vertex source code.
@@ -271,7 +336,8 @@ glslunit.compiler.ShaderProgram.prototype.getFragmentSource = function(
  */
 glslunit.compiler.ShaderProgram.prototype.getOriginalFragmentSource = function(
     opt_newline) {
-  return this.originalFragmentSource.replace(/\n/g, opt_newline || '\\n');
+  return glslunit.compiler.ShaderProgram.escapeString(
+      this.originalFragmentSource, opt_newline);
 };
 
 
@@ -283,9 +349,9 @@ glslunit.compiler.ShaderProgram.prototype.getOriginalFragmentSource = function(
  */
 glslunit.compiler.ShaderProgram.prototype.getOriginalVertexSource = function(
     opt_newline) {
-  return this.originalVertexSource.replace(/\n/g, opt_newline || '\\n');
+  return glslunit.compiler.ShaderProgram.escapeString(
+      this.originalVertexSource, opt_newline);
 };
-
 
 
 /**
@@ -299,7 +365,9 @@ glslunit.compiler.ShaderProgram.prototype.getAttributes = function() {
   for (var i in this.attributeMap) {
     result.push(this.attributeMap[i]);
   }
-  result[result.length - 1]['last'] = true;
+  if (result.length > 0) {
+    result[result.length - 1]['last'] = true;
+  }
   return result;
 };
 
@@ -315,17 +383,24 @@ glslunit.compiler.ShaderProgram.prototype.getUniforms = function() {
   for (var i in this.uniformMap) {
     result.push(this.uniformMap[i]);
   }
-  result[result.length - 1]['last'] = true;
+  if (result.length > 0) {
+    result[result.length - 1]['last'] = true;
+  }
   return result;
 };
 
 
 /**
- * Fills in any uniform or attribute entries in this shader program that haven't
- * already been filled in.
+ * Fills in any jsConst, uniform or attribute entries in this shader program
+ * that haven't already been filled in.
  */
-glslunit.compiler.ShaderProgram.prototype.defaultUniformsAndAttributes =
+glslunit.compiler.ShaderProgram.prototype.defaultProgramShortNames =
     function() {
+  goog.array.forEach(this.jsConsts, function(jsConst) {
+    if (jsConst.shortName == '') {
+      jsConst.shortName = jsConst.originalName;
+    }
+  });
   var attributeShortNameToEntry = {};
   for (var attributeName in this.attributeMap) {
     var attribute = this.attributeMap[attributeName];
@@ -344,6 +419,8 @@ glslunit.compiler.ShaderProgram.prototype.defaultUniformsAndAttributes =
 
 
 /**
+ * Defaults the variable entries for attributes and uniforms for a shader
+ * program.
  * @param {!Object} ast The AST we're defaulting program variables for.
  * @param {!Object.<string, glslunit.compiler.ShaderAttributeEntry>}
  *     attributeShortNameToEntry Map of the short name for an attribute to its
@@ -371,8 +448,13 @@ glslunit.compiler.ShaderProgram.prototype.defaultProgramVariables_ =
           entry = new glslunit.compiler.ShaderAttributeEntry();
           entry.shortName = varName;
           entry.originalName = varName;
+          var attributeSource = glslunit.Generator.getSourceCode(publicVar);
+          var attributeLocation = this.originalVertexSource.search(
+              attributeSource);
           var parsedSize = parseInt(varType.slice(3, 4), 10);
           entry.variableSize = isNaN(parsedSize) ? 1 : parsedSize;
+          entry.debugSourceOffset = attributeLocation;
+          entry.debugSourceSize = attributeSource.length;
           this.attributeMap[varName] = entry;
         }
       } else { // Has to be a uniform.

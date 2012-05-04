@@ -18,10 +18,22 @@
  */
 
 goog.require('glslunit.testing.IdentityInputValue');
-goog.require('goog.testing.jsunit');
 
-function testIdentityInputValue() {
+/**
+ * Constructor for IdentityInputValueTest
+ * @constructor
+ */
+function IdentityInputValueTest() {
+}
+registerTestSuite(IdentityInputValueTest);
+
+
+
+/**
+ * Test case testIdentityInputValue
+ */
+IdentityInputValueTest.prototype.testIdentityInputValue = function() {
   var shaderVariable = {};
   var inputValue = new glslunit.testing.IdentityInputValue(shaderVariable);
-  assertEquals(shaderVariable, inputValue.getShaderVariable());
-}
+  expectEq(shaderVariable, inputValue.getShaderVariable());
+};

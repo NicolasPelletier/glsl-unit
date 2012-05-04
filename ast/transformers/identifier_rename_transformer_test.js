@@ -21,7 +21,20 @@ goog.require('glslunit.Generator');
 goog.require('glslunit.IdentifierRenameTransformer');
 goog.require('glslunit.glsl.parser');
 
-function testQualiferTransformer() {
+/**
+ * Constructor for IdentifierRenameTransformerTest
+ * @constructor
+ */
+function IdentifierRenameTransformerTest() {
+}
+registerTestSuite(IdentifierRenameTransformerTest);
+
+
+
+/**
+ * Test case testQualiferTransformer
+ */
+IdentifierRenameTransformerTest.prototype.testQualiferTransformer = function() {
   var testSource =
       'void main(){' +
       'gl_FragColor=vec4(1.,1.,1.,1.);' +
@@ -34,6 +47,6 @@ function testQualiferTransformer() {
   var transformer = new glslunit.IdentifierRenameTransformer('gl_FragColor',
                                                              '__gl_FragColor');
   var result = transformer.transformNode(testAst);
-  assertEquals(expectedSource, glslunit.Generator.getSourceCode(result));
-  assertEquals(testSource, glslunit.Generator.getSourceCode(testAst));
-}
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(result));
+  expectEq(testSource, glslunit.Generator.getSourceCode(testAst));
+};

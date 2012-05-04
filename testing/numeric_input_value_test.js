@@ -20,14 +20,26 @@
 goog.require('glslunit.testing.NumericInputValue');
 goog.require('glslunit.testing.UntypedValue');
 goog.require('goog.array');
-goog.require('goog.testing.jsunit');
 
 
 
-function testBufferedAs() {
+/**
+ * Constructor for NumericInputValueTest
+ * @constructor
+ */
+function NumericInputValueTest() {
+}
+registerTestSuite(NumericInputValueTest);
+
+
+
+/**
+ * Test case testBufferedAs
+ */
+NumericInputValueTest.prototype.testBufferedAs = function() {
   var testValue = new glslunit.testing.UntypedValue(null, 'someVariable');
   var typedValue = testValue.asArray([1, 2, 3, 4]);
   Int32Array = {};
   typedValue.bufferedAs(Int32Array);
-  assertEquals(Int32Array, typedValue.getShaderVariable().bufferType_);
-}
+  expectEq(Int32Array, typedValue.getShaderVariable().bufferType_);
+};

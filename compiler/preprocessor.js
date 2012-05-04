@@ -7,22 +7,32 @@
  */
 goog.provide('glslunit.compiler.Preprocessor');
 
+goog.require('glslunit.NodeCollector');
+goog.require('glslunit.compiler.ShaderJsConst');
 goog.require('glslunit.compiler.ShaderMode');
 goog.require('glslunit.compiler.ShaderProgram');
 goog.require('glslunit.glsl.parser');
 goog.require('goog.array');
-goog.require('goog.object');
 
 
 
 /**
  * The Preprocessor should never be constructed.  Instead, use the static method
  *     ParseFile.
- *     TODO(rowillia): Support modes.
  * @constructor
  */
 glslunit.compiler.Preprocessor = function() {
 };
+
+
+/**
+ * Regular expression for finding license comments in the code.
+ * @type {RegExp}
+ * @const
+ * @private
+ */
+glslunit.compiler.Preprocessor.RE_LICENSE_ =
+    /\/\*\*\n \* @license[\s\S]*?\*\//g;
 
 
 /**
@@ -31,7 +41,7 @@ glslunit.compiler.Preprocessor = function() {
  * @const
  * @private
  */
-glslunit.compiler.RE_CLASS_ = /\/\/!\s*CLASS=(\S*)/;
+glslunit.compiler.Preprocessor.RE_CLASS_ = /\/\/!\s*CLASS=(\S*)/;
 
 
 /**
@@ -40,7 +50,7 @@ glslunit.compiler.RE_CLASS_ = /\/\/!\s*CLASS=(\S*)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_SUPERCLASS_ = /\/\/!\s*SUPERCLASS=(\S*)/;
+glslunit.compiler.Preprocessor.RE_SUPERCLASS_ = /\/\/!\s*SUPERCLASS=(\S*)/;
 
 
 /**
@@ -49,7 +59,7 @@ glslunit.compiler.RE_SUPERCLASS_ = /\/\/!\s*SUPERCLASS=(\S*)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_NAMESPACE_ = /\/\/!\s*NAMESPACE=(\S*)/;
+glslunit.compiler.Preprocessor.RE_NAMESPACE_ = /\/\/!\s*NAMESPACE=(\S*)/;
 
 
 /**
@@ -58,7 +68,7 @@ glslunit.compiler.RE_NAMESPACE_ = /\/\/!\s*NAMESPACE=(\S*)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_FRAGMENT_ = /\/\/!\s*FRAGMENT/;
+glslunit.compiler.Preprocessor.RE_FRAGMENT_ = /\/\/!\s*FRAGMENT/;
 
 
 /**
@@ -67,7 +77,7 @@ glslunit.compiler.RE_FRAGMENT_ = /\/\/!\s*FRAGMENT/;
  * @const
  * @private
  */
-glslunit.compiler.RE_VERTEX_ = /\/\/!\s*VERTEX/;
+glslunit.compiler.Preprocessor.RE_VERTEX_ = /\/\/!\s*VERTEX/;
 
 
 /**
@@ -76,7 +86,7 @@ glslunit.compiler.RE_VERTEX_ = /\/\/!\s*VERTEX/;
  * @const
  * @private
  */
-glslunit.compiler.RE_COMMON_ = /\/\/!\s*COMMON/;
+glslunit.compiler.Preprocessor.RE_COMMON_ = /\/\/!\s*COMMON/;
 
 
 /**
@@ -85,7 +95,24 @@ glslunit.compiler.RE_COMMON_ = /\/\/!\s*COMMON/;
  * @const
  * @private
  */
-glslunit.compiler.RE_INCLUDE_ = /\/\/!\s*INCLUDE\s+(.*)/;
+glslunit.compiler.Preprocessor.RE_INCLUDE_ = /\/\/!\s*INCLUDE\s+(.*)/;
+
+/**
+ * Regular expression for requiring a symbol from another shader.
+ * @type {RegExp}
+ * @const
+ * @private
+ */
+glslunit.compiler.Preprocessor.RE_REQUIRE_ = /\/\/!\s*REQUIRE\s+(.*)/;
+
+
+/**
+ * Regular expression for exporting symbols to other shaders.
+ * @type {RegExp}
+ * @const
+ * @private
+ */
+glslunit.compiler.Preprocessor.RE_PROVIDE_ = /\/\/!\s*PROVIDE\s+(.*)/;
 
 
 /**
@@ -94,7 +121,7 @@ glslunit.compiler.RE_INCLUDE_ = /\/\/!\s*INCLUDE\s+(.*)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_TEMPLATE_ = /\/\/!\s*TEMPLATE\s+(.*)/;
+glslunit.compiler.Preprocessor.RE_TEMPLATE_ = /\/\/!\s*TEMPLATE\s+(.*)/;
 
 
 /**
@@ -103,7 +130,7 @@ glslunit.compiler.RE_TEMPLATE_ = /\/\/!\s*TEMPLATE\s+(.*)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_DEFAULT_MODE_ = /\/\/!\s*MODE\s+(\S+)/;
+glslunit.compiler.Preprocessor.RE_DEFAULT_MODE_ = /\/\/!\s*MODE\s+(\S+)/;
 
 
 /**
@@ -112,7 +139,7 @@ glslunit.compiler.RE_DEFAULT_MODE_ = /\/\/!\s*MODE\s+(\S+)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_MODE_ = /\/\/!\s*MODE\s+(\S+)\s+(.*)/;
+glslunit.compiler.Preprocessor.RE_MODE_ = /\/\/!\s*MODE\s+(\S+)\s+(.*)/;
 
 
 /**
@@ -121,7 +148,7 @@ glslunit.compiler.RE_MODE_ = /\/\/!\s*MODE\s+(\S+)\s+(.*)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_JSREQUIRE_ = /\/\/!\s*JSREQUIRE\s+(\S+)/;
+glslunit.compiler.Preprocessor.RE_JSREQUIRE_ = /\/\/!\s*JSREQUIRE\s+(\S+)/;
 
 
 /**
@@ -130,7 +157,7 @@ glslunit.compiler.RE_JSREQUIRE_ = /\/\/!\s*JSREQUIRE\s+(\S+)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_JSCONST_ = /\/\/!\s*JSCONST\s+(\S+)\s+(.*)/;
+glslunit.compiler.Preprocessor.RE_JSCONST_ = /\/\/!\s*JSCONST\s+(\S+)\s+(.*)/;
 
 
 /**
@@ -139,16 +166,8 @@ glslunit.compiler.RE_JSCONST_ = /\/\/!\s*JSCONST\s+(\S+)\s+(.*)/;
  * @const
  * @private
  */
-glslunit.compiler.RE_OVERRIDE_ = /\/\/!\s*OVERRIDE\s+(\S+)\s+(\S+)/;
-
-
-/**
- * Regular expression for defining a program
- * @type {RegExp}
- * @const
- * @private
- */
-glslunit.compiler.RE_PROGRAM_ = /\/\/!\s*PROGRAM\s+(\S+)\s+(.*)/;
+glslunit.compiler.Preprocessor.RE_OVERRIDE_ =
+    /\/\/!\s*OVERRIDE\s+(\S+)\s+(\S+)/;
 
 
 /**
@@ -162,10 +181,28 @@ glslunit.compiler.RE_PROGRAM_ = /\/\/!\s*PROGRAM\s+(\S+)\s+(.*)/;
  */
 glslunit.compiler.Preprocessor.ParseFile = function(fileName, libraryFiles) {
   var vertexSourceMap = [], fragmentSourceMap = [];
+  var provideFileMap = {};
+  for (var libraryFileName in libraryFiles) {
+    var libraryFile = libraryFiles[libraryFileName];
+    goog.array.forEach(libraryFile.split('\n'), function(line) {
+      var match;
+      if (match = glslunit.compiler.Preprocessor.RE_PROVIDE_.exec(line)) {
+        var providedSymbol = match[1];
+        if (providedSymbol in provideFileMap) {
+          throw new Error('Symbol ' + providedSymbol + ' is provided by two ' +
+              'files, ' + libraryFileName + ' and ' +
+              provideFileMap[providedSymbol]);
+        } else {
+          provideFileMap[providedSymbol] = libraryFileName;
+        }
+      }
+    });
+  }
+  var includedFiles = {};
   var result = glslunit.compiler.Preprocessor.ParseFileSource_(
-      fileName, libraryFiles,
+      fileName, libraryFiles, provideFileMap, includedFiles,
       vertexSourceMap, fragmentSourceMap);
-
+  result.includedFiles = includedFiles;
   try {
     result.vertexAst =
         glslunit.glsl.parser.parse(result.originalVertexSource, 'vertex_start');
@@ -186,6 +223,18 @@ glslunit.compiler.Preprocessor.ParseFile = function(fileName, libraryFiles) {
                                                            fragmentSourceMap,
                                                            libraryFiles);
   }
+  var licenseSet = {};
+  var match;
+  var completeSource = result.originalVertexSource +
+      result.originalFragmentSource;
+  while ((match =
+          glslunit.compiler.Preprocessor.RE_LICENSE_.exec(completeSource))) {
+    if (!(match[0] in licenseSet)) {
+      licenseSet[match[0]] = true;
+      result.licenses.push(match[0]);
+    }
+  }
+  result.defaultProgramShortNames();
   return result;
 };
 
@@ -226,6 +275,10 @@ glslunit.compiler.Preprocessor.FormatParseError_ = function(exception,
  * @param {string} fileName The name of the file to parse.
  * @param {!Object.<string, string>} libraryFiles A map of filenames to the
  *     contents of the file for library files.
+ * @param {!Object.<string, string>} provideFileMap A map of symbols to the
+ *     files that provide those symbols.
+ * @param {!Object.<string, boolean>} includedFiles set of files already
+ *     included in the result.
  * @param {!Array.<{fileName: string, localLine: number}>} vertexSourceMap Array
  *     mapping line numbers to their source file for the vertex program.
  * @param {!Array.<{fileName: string, localLine: number}>} fragmentSourceMap
@@ -235,31 +288,38 @@ glslunit.compiler.Preprocessor.FormatParseError_ = function(exception,
  */
 glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
                                                            libraryFiles,
+                                                           provideFileMap,
+                                                           includedFiles,
                                                            vertexSourceMap,
                                                            fragmentSourceMap) {
   var inVertex = true;
   var inFragment = true;
   var result = new glslunit.compiler.ShaderProgram();
+  if (!(fileName in libraryFiles)) {
+    throw new Error('Library file ' + fileName + ' couldn\'t be found');
+  }
   // Remove any line continuations
   var fileSource = libraryFiles[fileName].replace(/\\\n/g, '');
   goog.array.forEach(fileSource.split('\n'), function(line, index) {
     var match;
-    if (match = glslunit.compiler.RE_CLASS_.exec(line)) {
+    if (match = glslunit.compiler.Preprocessor.RE_CLASS_.exec(line)) {
       result.className = match[1];
-    } else if (match = glslunit.compiler.RE_SUPERCLASS_.exec(line)) {
+    } else if (match =
+               glslunit.compiler.Preprocessor.RE_SUPERCLASS_.exec(line)) {
       result.superClass = match[1];
-    } else if (match = glslunit.compiler.RE_NAMESPACE_.exec(line)) {
+    } else if (match =
+               glslunit.compiler.Preprocessor.RE_NAMESPACE_.exec(line)) {
       result.namespace = match[1];
-    } else if (match = glslunit.compiler.RE_FRAGMENT_.exec(line)) {
+    } else if (match = glslunit.compiler.Preprocessor.RE_FRAGMENT_.exec(line)) {
       inFragment = true;
       inVertex = false;
-    } else if (match = glslunit.compiler.RE_VERTEX_.exec(line)) {
+    } else if (match = glslunit.compiler.Preprocessor.RE_VERTEX_.exec(line)) {
       inFragment = false;
       inVertex = true;
-    } else if (match = glslunit.compiler.RE_COMMON_.exec(line)) {
+    } else if (match = glslunit.compiler.Preprocessor.RE_COMMON_.exec(line)) {
       inFragment = true;
       inVertex = true;
-    } else if (match = glslunit.compiler.RE_MODE_.exec(line)) {
+    } else if (match = glslunit.compiler.Preprocessor.RE_MODE_.exec(line)) {
       var mode = new glslunit.compiler.ShaderMode();
       mode.preprocessorName = match[1];
       var options = match[2].split(',');
@@ -278,13 +338,14 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
         mode.options.push({name: keyVal[0], value: parseInt(keyVal[1], 10)});
       });
       result.shaderModes.push(mode);
-    } else if (match = glslunit.compiler.RE_DEFAULT_MODE_.exec(line)) {
+    } else if (match =
+               glslunit.compiler.Preprocessor.RE_DEFAULT_MODE_.exec(line)) {
       var mode = new glslunit.compiler.ShaderMode();
       mode.preprocessorName = match[1];
       mode.options.push({name: 'OFF', value: 0});
       mode.options.push({name: 'ON', value: 1});
       result.shaderModes.push(mode);
-    } else if (match = glslunit.compiler.RE_OVERRIDE_.exec(line)) {
+    } else if (match = glslunit.compiler.Preprocessor.RE_OVERRIDE_.exec(line)) {
       if (inFragment) {
         result.originalFragmentSource =
             glslunit.compiler.Preprocessor.OverrideFunction_(
@@ -295,25 +356,14 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
             glslunit.compiler.Preprocessor.OverrideFunction_(
                 match[1], match[2], result.originalVertexSource);
       }
-    } else if (match = glslunit.compiler.RE_JSREQUIRE_.exec(line)) {
+    } else if (match =
+               glslunit.compiler.Preprocessor.RE_JSREQUIRE_.exec(line)) {
       result.jsRequires.push(match[1]);
-    } else if (match = glslunit.compiler.RE_JSCONST_.exec(line)) {
-      result.jsConsts.push({value: match[1], expression: match[2]});
-    } else if (match = glslunit.compiler.RE_PROGRAM_.exec(line)) {
-      var variant = new glslunit.compiler.ShaderVariant();
-      variant.name = match[1];
-      var modeSettings = match[2].split(',');
-      goog.array.forEach(modeSettings, function(setting) {
-        var keyVal = setting.split(':');
-        if (keyVal.length != 2 || !keyVal[1].match(/^[0-9]+$/)) {
-          throw fileName + ' ' + index + ':0 ' +
-              'Program mode setting has invalid format!\n' +
-              '\t' + line;
-        }
-        variant.modeSettings.push({name: keyVal[0],
-                                   value: parseInt(keyVal[1], 10)});
-      });
-      result.shaderModes.push(mode);
+    } else if (match = glslunit.compiler.Preprocessor.RE_JSCONST_.exec(line)) {
+      var jsConst = new glslunit.compiler.ShaderJsConst();
+      jsConst.originalName = match[1];
+      jsConst.expression = match[2];
+      result.jsConsts.push(jsConst);
     }
     if (inFragment) {
       result.originalFragmentSource += line + '\n';
@@ -323,27 +373,43 @@ glslunit.compiler.Preprocessor.ParseFileSource_ = function(fileName,
       result.originalVertexSource += line + '\n';
       vertexSourceMap.push({fileName: fileName, localLine: index});
     }
-    if (match = glslunit.compiler.RE_TEMPLATE_.exec(line)) {
+    if (match = glslunit.compiler.Preprocessor.RE_TEMPLATE_.exec(line)) {
       result.template = match[1];
     }
     // Add in include code after appending comment to source code to keep things
     // in the correct order.
-    if (match = glslunit.compiler.RE_INCLUDE_.exec(line)) {
-      var includedFile = match[1];
-      var includedProgram =
+    var includeFile = function(includedFileName) {
+      if (!(includedFileName in includedFiles)) {
+        // Mark this file as included.
+        includedFiles[includedFileName] = true;
+        var includedProgram =
           glslunit.compiler.Preprocessor.ParseFileSource_(
-              includedFile,
+            includedFileName,
               libraryFiles,
+              provideFileMap,
+              includedFiles,
               vertexSourceMap,
               fragmentSourceMap);
-      result.originalVertexSource += includedProgram.originalVertexSource;
-      result.originalFragmentSource += includedProgram.originalFragmentSource;
-      Array.prototype.push.apply(result.shaderModes,
-                                 includedProgram.shaderModes);
-      Array.prototype.push.apply(result.jsRequires,
-                                 includedProgram.jsRequires);
-      Array.prototype.push.apply(result.jsConsts,
-                                 includedProgram.jsConsts);
+        // Copy all of the values from the included file to the parent file.
+        result.originalVertexSource += includedProgram.originalVertexSource;
+        result.originalFragmentSource += includedProgram.originalFragmentSource;
+        Array.prototype.push.apply(result.shaderModes,
+                                   includedProgram.shaderModes);
+        Array.prototype.push.apply(result.jsRequires,
+                                   includedProgram.jsRequires);
+        Array.prototype.push.apply(result.jsConsts,
+                                   includedProgram.jsConsts);
+      }
+    }
+    if (match = glslunit.compiler.Preprocessor.RE_INCLUDE_.exec(line)) {
+      includeFile(match[1]);
+    } else if (match = glslunit.compiler.Preprocessor.RE_REQUIRE_.exec(line)) {
+      var requireSymbol = match[1];
+      if (!(requireSymbol in provideFileMap)) {
+        throw new Error('File ' + fileName + 'required symbol ' +
+            requireSymbol + ' but it was never provided.');
+      }
+      includeFile(provideFileMap[requireSymbol]);
     }
   });
   return result;

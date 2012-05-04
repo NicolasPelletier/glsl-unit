@@ -32,6 +32,7 @@ goog.require('glslunit.compiler.ShaderProgram');
 goog.require('glslunit.compiler.VariableMinifier');
 goog.require('glslunit.glsl.parser');
 goog.require('goog.array');
+goog.require('goog.object');
 
 
 
@@ -880,8 +881,9 @@ glslunit.compiler.GlslPreprocessor.prototype.performStep =
   if (this.minifyJsConst_) {
     for (var i in shaderProgram.jsConsts) {
       var newName = nameGenerator.getNextShortDefinition();
-      newDefinitions.push(shaderProgram.jsConsts[i].value + ' ' + newName);
-      shaderProgram.jsConsts[i].value = newName;
+      newDefinitions.push(shaderProgram.jsConsts[i].originalName +
+          ' ' + newName);
+      shaderProgram.jsConsts[i].shortName = newName;
     }
   }
   var definedModes = this.implicitModes_.map(function(x) {

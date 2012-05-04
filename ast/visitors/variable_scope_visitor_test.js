@@ -18,7 +18,16 @@
 
 goog.require('glslunit.VariableScopeVisitor');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+
+
+/**
+ * Constructor for VariableScopeVisitorTest
+ * @constructor
+ */
+function VariableScopeVisitorTest() {
+}
+registerTestSuite(VariableScopeVisitorTest);
 
 
 
@@ -29,7 +38,7 @@ function assertObjectCount(str, expected, obj) {
       count++;
     }
   }
-  assertEquals(str, expected, count);
+  expectEq(expected, count, str);
 }
 
 
@@ -37,7 +46,7 @@ function assertObjectCount(str, expected, obj) {
  * Tests that all of the global variables declared in the root scope are
  * properly collected with getVariablesInScope.
  */
-function testRootCollectScope() {
+VariableScopeVisitorTest.prototype.testRootCollectScope = function() {
   var testSource =
       'attribute int foo;' +
       'void main() {' +
@@ -51,17 +60,16 @@ function testRootCollectScope() {
       glslunit.VariableScopeVisitor.getVariablesInScope(testAST, testAST);
   assertObjectCount('Root should have only declared one variable',
                     1, variables);
-  assertEquals('foo should be stored as a variable',
-               variables['foo'],
-               testAST.statements[0]);
-}
+  expectEq(variables['foo'],
+      testAST.statements[0], 'foo should be stored as a variable');
+};
 
 
 /**
  * Tests that if a variable is redeclared locally the local definition is the
  * one returned.
  */
-function testVariableOverride() {
+VariableScopeVisitorTest.prototype.testVariableOverride = function() {
   var testSource =
       'attribute int foo;' +
       'void main(int a, int b) {' +
@@ -76,17 +84,17 @@ function testVariableOverride() {
       glslunit.VariableScopeVisitor.getVariablesInScope(testAST, innerScope);
   assertObjectCount('6 variables should have been declared',
                     6, variables);
-  assertNotEquals('foo should have been overridden inside of the inner scope',
-                  variables['foo'],
-                  testAST.statements[0]);
-}
+  expectNe(variables['foo'],
+      testAST.statements[0],
+          'foo should have been overridden inside of the inner scope');
+};
 
 
 /**
  * Tests that when getting the variables in scope inside of a function that
  * parameters get precedence over local variables.
  */
-function testVariableParameterWins() {
+VariableScopeVisitorTest.prototype.testVariableParameterWins = function() {
   var testSource =
       'attribute int foo;' +
       'void main(int a, int b) {' +
@@ -98,7 +106,7 @@ function testVariableParameterWins() {
       glslunit.VariableScopeVisitor.getVariablesInScope(testAST, innerScope);
   assertObjectCount('5 variables should have been declared',
                     5, variables);
-  assertEquals('b should not have been overridden locally',
-               variables['b'],
-               testAST.statements[1].parameters[1]);
-}
+  expectEq(variables['b'],
+      testAST.statements[1].parameters[1],
+          'b should not have been overridden locally');
+};

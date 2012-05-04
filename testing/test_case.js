@@ -245,15 +245,15 @@ glslunit.testing.TestCase.prototype.getExpectations = function() {
  */
 glslunit.testing.TestCase.prototype.run = function() {
   //Create global test functions.
-  window.define = goog.bind(function(defineText) {
+  goog.global.define = goog.bind(function(defineText) {
     this.defines_.push(defineText);
   }, this);
-  window.set = goog.bind(function(variableName) {
+  goog.global.set = goog.bind(function(variableName) {
     var newValue = new glslunit.testing.UntypedValue(variableName);
     this.values_[variableName] = newValue;
     return newValue;
   }, this);
-  window.expect = goog.bind(function(variableName) {
+  goog.global.expect = goog.bind(function(variableName) {
     var expectationValue = new glslunit.testing.GlobalValue(variableName);
     var expectation =
       new glslunit.testing.ComparisonExpectation(expectationValue);
@@ -261,7 +261,7 @@ glslunit.testing.TestCase.prototype.run = function() {
     return expectation.getTest();
   }, this);
   if (this.testType_ == glslunit.testing.TestCase.TestType.FRAGMENT) {
-    window.expectDiscard = goog.bind(function() {
+    goog.global.expectDiscard = goog.bind(function() {
       var expectation = new glslunit.testing.DiscardExpectation();
       this.expectations_.push(expectation);
       return expectation;
@@ -278,10 +278,10 @@ glslunit.testing.TestCase.prototype.run = function() {
   this.testFn_(this.context_);
 
   // Delete the global test functions.
-  delete window.define;
-  delete window.set;
-  delete window.expect;
-  delete window.expectDiscard;
+  delete goog.global.define;
+  delete goog.global.set;
+  delete goog.global.expect;
+  delete goog.global.expectDiscard;
 
   var variables = [];
   var setVariables = {};

@@ -9,7 +9,9 @@
 goog.provide('glslunit.compiler.BasicCompiler');
 
 goog.require('glslunit.Generator');
+goog.require('glslunit.compiler.BraceReducer');
 goog.require('glslunit.compiler.Compiler');
+goog.require('glslunit.compiler.ConstructorMinifier');
 goog.require('glslunit.compiler.DeadFunctionRemover');
 goog.require('glslunit.compiler.DeclarationConsolidation');
 goog.require('glslunit.compiler.FunctionMinifier');
@@ -52,6 +54,7 @@ function main() {
                                                          'vertex_start');
     shaderProgram.fragmentAst = glslunit.glsl.parser.parse(fragmentSource,
                                                            'fragment_start');
+    shaderProgram.defaultProgramShortNames();
   } catch (e) {
     console.error(e);
     return;
@@ -67,6 +70,10 @@ function main() {
                         new glslunit.compiler.VariableMinifier(false));
   compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
                         new glslunit.compiler.FunctionMinifier());
+  compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
+                        new glslunit.compiler.BraceReducer());
+  compiler.registerStep(glslunit.compiler.Compiler.CompilerPhase.MINIFICATION,
+                        new glslunit.compiler.ConstructorMinifier());
 
   shaderProgram = compiler.compileProgram();
 

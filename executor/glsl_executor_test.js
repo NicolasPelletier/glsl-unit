@@ -24,7 +24,17 @@ goog.require('glslunit.TextureShaderVariable');
 goog.require('glslunit.glsl.parser');
 goog.require('goog.array');
 goog.require('goog.testing.LooseMock');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for GlslExecutorTest
+ * @constructor
+ */
+function GlslExecutorTest() {
+  setUp();
+}
+registerTestSuite(GlslExecutorTest);
+
+
 
 function setUp() {
   var func = function()  {};
@@ -102,74 +112,74 @@ testExecutor.getVertexAst = function(unused) {
  */
 testExecutor.prototype.getVertexAst = testExecutor.getVertexAst;
 
-function testDecodeFloat() {
+/**
+ * Test case testDecodeFloat
+ */
+GlslExecutorTest.prototype.testDecodeFloat = function() {
   testValues = [0, 0, 0, 0];
   testValues[0] = 1 << 7;
   testValues[1] = 100;
-  assertTrue('Sign bit was positive, should have a positive number',
-             glslunit.Executor.decodeFloat(testValues) > 0);
+  expectTrue(glslunit.Executor.decodeFloat(testValues) > 0,
+      'Sign bit was positive, should have a positive number');
   testValues[0] = 0;
   testValues[1] = 100;
-  assertTrue('Sign bit was negative, should have a negatie number',
-             glslunit.Executor.decodeFloat(testValues) < 0);
+  expectTrue(glslunit.Executor.decodeFloat(testValues) < 0,
+      'Sign bit was negative, should have a negatie number');
   testValues[0] = 1 << 7 | (0x00000004 << 2);
-  assertTrue('exponent field was < 16, should have a number < 0',
-             glslunit.Executor.decodeFloat(testValues) < 1);
+  expectTrue(glslunit.Executor.decodeFloat(testValues) < 1,
+      'exponent field was < 16, should have a number < 0');
   testValues[0] = 1 << 7 | (0x00000014 << 2);
-  assertTrue('exponent field was > 16, should have a number > 0',
-             glslunit.Executor.decodeFloat(testValues) > 1);
+  expectTrue(glslunit.Executor.decodeFloat(testValues) > 1,
+      'exponent field was > 16, should have a number > 0');
 
   // Some golden tests.
   testValues = [86, 254, 0, 254]; // -32
-  assertTrue('Too much error for golden test -32',
-             (Math.abs(glslunit.Executor.decodeFloat(testValues) +
-                       32.0) / 32.0) < 1e-5);
+  expectTrue(Math.abs(glslunit.Executor.decodeFloat(testValues) + 32) / 32 <
+             1e-5,
+      'Too much error for golden test -32');
 
   testValues = [0, 0, 0, 0]; // Discard
-  assertEquals('discard', glslunit.Executor.decodeFloat(testValues));
+  expectEq('discard', glslunit.Executor.decodeFloat(testValues));
 
   testValues = [1 << 7, 0, 0, 0]; // 0
-  assertTrue('Too much error for golden test 0',
-             Math.abs(glslunit.Executor.decodeFloat(testValues)) < 1e-5);
+  expectTrue(Math.abs(glslunit.Executor.decodeFloat(testValues)) < 1e-5,
+      'Too much error for golden test 0');
 
   testValues = [194, 254, 0, 254]; // 1
-  assertTrue('Too much error for golden test 1',
-             Math.abs((glslunit.Executor.decodeFloat(testValues) -
-                       1.0) / 1.0) < 1e-5);
+  expectTrue(Math.abs((glslunit.Executor.decodeFloat(testValues) - 1) / 1) <
+             1e-5,
+      'Too much error for golden test 1');
 
   testValues = [234, 137, 170, 95]; // 555.0
-  assertTrue('Too much error for golden test 555',
-             Math.abs((glslunit.Executor.decodeFloat(testValues) -
-                 555.0) / 555.0) < 1e-5);
-}
+  expectTrue(Math.abs((glslunit.Executor.decodeFloat(testValues) - 555) / 555) <
+             1e-5,
+      'Too much error for golden test 555');
+};
 
 
 /**
  * Tests that the encoded function is added properly.
  */
-function testAddEncodeFunction() {
+GlslExecutorTest.prototype.testAddEncodeFunction = function() {
   var testAst = testExecutor.getVertexAst(null);
   var instrumented = glslunit.Executor.addEncodeFunction_(testAst);
 
-  assertEquals('Original AST should have been untouched',
-               1,
-               testAst.statements.length);
+  expectEq(1,
+      testAst.statements.length, 'Original AST should have been untouched');
 
-  assertEquals('Should have added mask function',
-               'upper_mask',
-               instrumented.statements[1].name);
+  expectEq('upper_mask',
+      instrumented.statements[1].name, 'Should have added mask function');
 
-  assertEquals('Should have added encode function',
-               'encodeFloat',
-               instrumented.statements[2].name);
-}
+  expectEq('encodeFloat',
+      instrumented.statements[2].name, 'Should have added encode function');
+};
 
 
 /**
  * Tests that all of the proper WebGL calls are made when making a call to
  * extractValue
  */
-function testExtractCall() {
+GlslExecutorTest.prototype.testExtractCall = function() {
   var webglMock = new goog.testing.LooseMock(webglContext);
   webglMock.VERTEX_SHADER = 0xD00D;
   webglMock.FRAGMENT_SHADER = 0xDEAD;
@@ -246,23 +256,23 @@ function testExtractCall() {
   var cleanupCalled = false;
   glslunit.NumberShaderVariable.prototype.bufferAttribute =
       function(context, program, size, verticies) {
-        var testVerticies = [-1.0, 1.0,0.0,
-                             -1.0,-1.0,0.0,
-                              1.0, 1.0,0.0];
-        assertEquals(webglMock, context);
-        assertEquals(sProgram, program);
-        assertEquals(3, size);
-        assertTrue(goog.array.equals(testVerticies, verticies));
+        var testVerticies = [-1.0, 1.0, 0.0,
+                             -1.0, -1.0, 0.0,
+                              1.0, 1.0, 0.0];
+        expectEq(webglMock, context);
+        expectEq(sProgram, program);
+        expectEq(3, size);
+        expectTrue(goog.array.equals(testVerticies, verticies));
         bufferCalled = true;
       };
   glslunit.NumberShaderVariable.prototype.bindData =
       function(context, program) {
-        assertEquals(webglMock, context);
-        assertEquals(sProgram, program);
-        assertTrue(bufferCalled);
+        expectEq(webglMock, context);
+        expectEq(sProgram, program);
+        expectTrue(bufferCalled);
       };
   glslunit.NumberShaderVariable.prototype.cleanUp = function(context) {
-      assertEquals(webglMock, context);
+      expectEq(webglMock, context);
       cleanupCalled = true;
     }
   webglMock.drawArrays(webglMock.TRIANGLE_STRIP, 0, 3);
@@ -293,11 +303,11 @@ function testExtractCall() {
   var variables = [mockVariable].concat(mockTextureVariables);
 
   var executor = new testExecutor(webglMock, null, variables, 250, 150);
-  assertTrue('Extracted wrong value',
-             Math.abs(executor.extractValue(null) - 555.0) < 1);
+  expectTrue(Math.abs(executor.extractValue(null) - 555) < 1,
+      'Extracted wrong value');
 
   goog.array.forEach(variables, function(variable) {
     variable.$verify();
   });
   mockVariable.$verify();
-}
+};

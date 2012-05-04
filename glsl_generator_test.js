@@ -17,18 +17,33 @@
  */
 
 goog.require('glslunit.Generator');
-goog.require('goog.testing.jsunit');
 
 
-function testVisitIdentifier() {
+/**
+ * Constructor for GlslGeneratorTest
+ * @constructor
+ */
+function GlslGeneratorTest() {
+}
+registerTestSuite(GlslGeneratorTest);
+
+
+
+/**
+ * Test case testVisitIdentifier
+ */
+GlslGeneratorTest.prototype.testVisitIdentifier = function() {
   var identifierNode = {
     type: 'identifier',
     name: 'oh_hai'
   };
-  assertEquals('oh_hai', glslunit.Generator.getSourceCode(identifierNode));
-}
+  expectEq('oh_hai', glslunit.Generator.getSourceCode(identifierNode));
+};
 
-function testVisitBinary() {
+/**
+ * Test case testVisitBinary
+ */
+GlslGeneratorTest.prototype.testVisitBinary = function() {
   var leftNode = {
     type: 'identifier',
     name: 'x'
@@ -46,10 +61,13 @@ function testVisitBinary() {
     left: leftNode,
     right: rightNode
   };
-  assertEquals('x*y', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('x*y', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testVisitTernary() {
+/**
+ * Test case testVisitTernary
+ */
+GlslGeneratorTest.prototype.testVisitTernary = function() {
   var trueNode = {
     type: 'identifier',
     name: 'x'
@@ -67,10 +85,13 @@ function testVisitTernary() {
     is_true: trueNode,
     is_false: falseNode
   };
-  assertEquals('false?x:y', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('false?x:y', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testTernaryChild() {
+/**
+ * Test case testTernaryChild
+ */
+GlslGeneratorTest.prototype.testTernaryChild = function() {
   var testNode = {
     type: 'binary',
     operator: {
@@ -97,10 +118,13 @@ function testTernaryChild() {
       }
     }
   };
-  assertEquals('1.*(false?1.:0.)', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('1.*(false?1.:0.)', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testVisitBinaryWithParen() {
+/**
+ * Test case testVisitBinaryWithParen
+ */
+GlslGeneratorTest.prototype.testVisitBinaryWithParen = function() {
   var leftNode = {
     type: 'binary',
     operator: {
@@ -174,89 +198,98 @@ function testVisitBinaryWithParen() {
     left: leftNode,
     right: rightNode
   };
-  assertEquals('x/(z*u*test())*(a-(b-c))',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('x/(z*u*test())*(a-(b-c))',
+      glslunit.Generator.getSourceCode(testNode));
+};
 
-function testVisitValue() {
+/**
+ * Test case testVisitValue
+ */
+GlslGeneratorTest.prototype.testVisitValue = function() {
   var testNode = {
     type: 'int',
     value: 256
   };
-  assertEquals('256', glslunit.Generator.getSourceCode(testNode));
+  expectEq('256', glslunit.Generator.getSourceCode(testNode));
   var testNode = {
     type: 'int',
     value: 1099511627775
   };
-  assertEquals('0xffffffffff', glslunit.Generator.getSourceCode(testNode));
+  expectEq('0xffffffffff', glslunit.Generator.getSourceCode(testNode));
   var testNode = {
     type: 'int',
     value: -1099511627775
   };
-  assertEquals('-0xffffffffff', glslunit.Generator.getSourceCode(testNode));
+  expectEq('-0xffffffffff', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'bool',
     value: true
   };
-  assertEquals('true', glslunit.Generator.getSourceCode(testNode));
+  expectEq('true', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: 1e-23
   };
-  assertEquals('1e-23', glslunit.Generator.getSourceCode(testNode));
+  expectEq('1e-23', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: 42
   };
-  assertEquals('42.', glslunit.Generator.getSourceCode(testNode));
+  expectEq('42.', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: 0.42
   };
-  assertEquals('.42', glslunit.Generator.getSourceCode(testNode));
+  expectEq('.42', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: 0.000001
   };
-  assertEquals('1e-6', glslunit.Generator.getSourceCode(testNode));
+  expectEq('1e-6', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: -0.00000523
   };
-  assertEquals('-5.23e-6', glslunit.Generator.getSourceCode(testNode));
+  expectEq('-5.23e-6', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: 10000
   };
-  assertEquals('1e4', glslunit.Generator.getSourceCode(testNode));
+  expectEq('1e4', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: 1000
   };
-  assertEquals('1e3', glslunit.Generator.getSourceCode(testNode));
+  expectEq('1e3', glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'float',
     value: 320000
   };
-  assertEquals('3.2e5', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('3.2e5', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testFunctionCall() {
+/**
+ * Test case testFunctionCall
+ */
+GlslGeneratorTest.prototype.testFunctionCall = function() {
   var testNode = {
     type: 'function_call',
     function_name: 'test',
     parameters: []
   };
-  assertEquals('test()', glslunit.Generator.getSourceCode(testNode));
+  expectEq('test()', glslunit.Generator.getSourceCode(testNode));
   testParameter = {
       type: 'identifier',
       name: 'a'
   };
   testNode.parameters = [testParameter, testParameter, testParameter];
-  assertEquals('test(a,a,a)', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('test(a,a,a)', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testPostfix() {
+/**
+ * Test case testPostfix
+ */
+GlslGeneratorTest.prototype.testPostfix = function() {
   var testNode = {
     type: 'postfix',
     operator: {
@@ -271,20 +304,23 @@ function testPostfix() {
       name: 'x'
     }
   };
-  assertEquals('x[42]', glslunit.Generator.getSourceCode(testNode));
+  expectEq('x[42]', glslunit.Generator.getSourceCode(testNode));
   testNode.operator = {
     type: 'field_selector',
     selection: 'rgba'
   };
-  assertEquals('x.rgba', glslunit.Generator.getSourceCode(testNode));
+  expectEq('x.rgba', glslunit.Generator.getSourceCode(testNode));
   testNode.operator = {
     type: 'operator',
     operator: '++'
   };
-  assertEquals('x++', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('x++', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testUnary() {
+/**
+ * Test case testUnary
+ */
+GlslGeneratorTest.prototype.testUnary = function() {
   var testNode = {
     type: 'unary',
     expression: {
@@ -296,7 +332,7 @@ function testUnary() {
       operator: '-'
     }
   };
-  assertEquals('-x', glslunit.Generator.getSourceCode(testNode));
+  expectEq('-x', glslunit.Generator.getSourceCode(testNode));
 
   var binaryNode = {
     type: 'binary',
@@ -310,10 +346,13 @@ function testUnary() {
     },
     right: testNode
   };
-  assertEquals('y- -x', glslunit.Generator.getSourceCode(binaryNode));
-}
+  expectEq('y- -x', glslunit.Generator.getSourceCode(binaryNode));
+};
 
-function testJump() {
+/**
+ * Test case testJump
+ */
+GlslGeneratorTest.prototype.testJump = function() {
   var testNode = {
     type: 'return',
     value: {
@@ -321,18 +360,21 @@ function testJump() {
       name: 'to_sender'
     }
   };
-  assertEquals('return to_sender;', glslunit.Generator.getSourceCode(testNode));
+  expectEq('return to_sender;', glslunit.Generator.getSourceCode(testNode));
   delete testNode.value;
-  assertEquals('return;', glslunit.Generator.getSourceCode(testNode));
+  expectEq('return;', glslunit.Generator.getSourceCode(testNode));
   testNode.type = 'continue';
-  assertEquals('continue;', glslunit.Generator.getSourceCode(testNode));
+  expectEq('continue;', glslunit.Generator.getSourceCode(testNode));
   testNode.type = 'break';
-  assertEquals('break;', glslunit.Generator.getSourceCode(testNode));
+  expectEq('break;', glslunit.Generator.getSourceCode(testNode));
   testNode.type = 'discard';
-  assertEquals('discard;', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('discard;', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testExpression() {
+/**
+ * Test case testExpression
+ */
+GlslGeneratorTest.prototype.testExpression = function() {
   var testNode = {
     type: 'expression',
     expression: {
@@ -351,24 +393,30 @@ function testExpression() {
       }
     }
   };
-  assertEquals('x-=12;', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('x-=12;', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testType() {
+/**
+ * Test case testType
+ */
+GlslGeneratorTest.prototype.testType = function() {
   var testNode = {
     type: 'type',
     name: 'vec4'
   };
-  assertEquals('vec4', glslunit.Generator.getSourceCode(testNode));
+  expectEq('vec4', glslunit.Generator.getSourceCode(testNode));
   testNode.qualifier = 'invariant varying';
-  assertEquals('invariant varying vec4',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('invariant varying vec4',
+      glslunit.Generator.getSourceCode(testNode));
   testNode.precision = 'highp';
-  assertEquals('invariant varying highp vec4',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('invariant varying highp vec4',
+      glslunit.Generator.getSourceCode(testNode));
+};
 
-function testDeclarator() {
+/**
+ * Test case testDeclarator
+ */
+GlslGeneratorTest.prototype.testDeclarator = function() {
   var testNode = {
     type: 'declarator',
     typeAttribute: {
@@ -386,7 +434,7 @@ function testDeclarator() {
       }
    ]
   };
-  assertEquals('int foo[];', glslunit.Generator.getSourceCode(testNode));
+  expectEq('int foo[];', glslunit.Generator.getSourceCode(testNode));
   testNode.declarators[0].arraySize = {
       type: 'int',
       value: 1
@@ -402,11 +450,13 @@ function testDeclarator() {
           value: 12
        }
      });
-  assertEquals('int foo[1],bar=12;',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('int foo[1],bar=12;', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testIfStatement() {
+/**
+ * Test case testIfStatement
+ */
+GlslGeneratorTest.prototype.testIfStatement = function() {
   var testNode = {
     type: 'if_statement',
     condition: {
@@ -421,8 +471,8 @@ function testIfStatement() {
       }
     }
   };
-  assertEquals('if(true)return false;',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('if(true)return false;',
+      glslunit.Generator.getSourceCode(testNode));
   var bodyStatements = [testNode.body].concat({
      type: 'expression',
      expression: {
@@ -445,22 +495,25 @@ function testIfStatement() {
     type: 'scope',
     statements: bodyStatements
   };
-  assertEquals('if(true){return false;x-=12;}',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('if(true){return false;x-=12;}',
+      glslunit.Generator.getSourceCode(testNode));
   var oldBody = testNode.body;
   testNode.body = {
     type: 'scope',
     statements: []
   };
   testNode.elseBody = oldBody;
-  assertEquals('if(true){}else{return false;x-=12;}',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('if(true){}else{return false;x-=12;}',
+      glslunit.Generator.getSourceCode(testNode));
   testNode.elseBody = oldBody.statements[0];
-  assertEquals('if(true){}else return false;',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('if(true){}else return false;',
+      glslunit.Generator.getSourceCode(testNode));
+};
 
-function testForLoop() {
+/**
+ * Test case testForLoop
+ */
+GlslGeneratorTest.prototype.testForLoop = function() {
   var testNode = {
     type: 'for_statement',
     initializer: {
@@ -514,8 +567,8 @@ function testForLoop() {
       statements: []
     }
   };
-  assertEquals('for(int i=0;i<23;i++){}',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('for(int i=0;i<23;i++){}',
+      glslunit.Generator.getSourceCode(testNode));
   testNode.body = {
     type: 'return',
     value: {
@@ -523,17 +576,20 @@ function testForLoop() {
        value: false
     }
   };
-  assertEquals('for(int i=0;i<23;i++)return false;',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('for(int i=0;i<23;i++)return false;',
+      glslunit.Generator.getSourceCode(testNode));
   testNode.body = {
     type: 'scope',
     statements: [testNode.body, testNode.body]
   };
-  assertEquals('for(int i=0;i<23;i++){return false;return false;}',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('for(int i=0;i<23;i++){return false;return false;}',
+      glslunit.Generator.getSourceCode(testNode));
+};
 
-function testWhile() {
+/**
+ * Test case testWhile
+ */
+GlslGeneratorTest.prototype.testWhile = function() {
   var testNode = {
     type: 'while_statement',
     condition: {
@@ -556,10 +612,13 @@ function testWhile() {
       statements: []
     }
   };
-  assertEquals('while(i<23){}', glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('while(i<23){}', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testDo() {
+/**
+ * Test case testDo
+ */
+GlslGeneratorTest.prototype.testDo = function() {
   var testNode = {
     type: 'do_statement',
     condition: {
@@ -582,7 +641,7 @@ function testDo() {
       statements: []
     }
   };
-  assertEquals('do{}while(i<23)', glslunit.Generator.getSourceCode(testNode));
+  expectEq('do{}while(i<23)', glslunit.Generator.getSourceCode(testNode));
   testNode.body = {
     type: 'return',
     value: {
@@ -590,11 +649,14 @@ function testDo() {
        value: false
     }
   };
-  assertEquals('do return false;while(i<23)',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('do return false;while(i<23)',
+      glslunit.Generator.getSourceCode(testNode));
+};
 
-function testPreprocessor() {
+/**
+ * Test case testPreprocessor
+ */
+GlslGeneratorTest.prototype.testPreprocessor = function() {
   var testNode = {
           type: 'preprocessor',
           directive: '#define',
@@ -611,14 +673,14 @@ function testPreprocessor() {
             }
           ]
         };
-        assertEquals('#define FOO(a,b) a + b - 1.0\n',
-                     glslunit.Generator.getSourceCode(testNode));
+        expectEq('#define FOO(a,b) a + b - 1.0\n',
+            glslunit.Generator.getSourceCode(testNode));
   testNode = {
     type: 'preprocessor',
     directive: '#ifdef',
     value: 'FOO'
   };
-  assertEquals('#ifdef FOO\n', glslunit.Generator.getSourceCode(testNode));
+  expectEq('#ifdef FOO\n', glslunit.Generator.getSourceCode(testNode));
   testNode.guarded_statements = [{
     type: 'return',
     value: {
@@ -626,19 +688,22 @@ function testPreprocessor() {
        value: false
     }
   }];
-  assertEquals('#ifdef FOO\nreturn false;\n#endif\n',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('#ifdef FOO\nreturn false;\n#endif\n',
+      glslunit.Generator.getSourceCode(testNode));
   testNode.elseBody = {
       type: 'preprocessor',
       directive: '#else',
       guarded_statements: testNode.guarded_statements
     };
-  assertEquals('#ifdef FOO\\nreturn false;\\n' +
-               '#else\\nreturn false;\\n#endif\\n',
-               glslunit.Generator.getSourceCode(testNode, '\\n'));
-}
+  expectEq('#ifdef FOO\\nreturn false;\\n' +
+           '#else\\nreturn false;\\n#endif\\n',
+      glslunit.Generator.getSourceCode(testNode, '\\n'));
+};
 
-function testFunction() {
+/**
+ * Test case testFunction
+ */
+GlslGeneratorTest.prototype.testFunction = function() {
   var testNode = {
       type: 'function_prototype',
       name: 'foo',
@@ -667,16 +732,16 @@ function testFunction() {
          }
       ]
   };
-  assertEquals('highp int foo(const in highp int x[4],int y);',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('highp int foo(const in highp int x[4],int y);',
+      glslunit.Generator.getSourceCode(testNode));
   testNode.type = 'function_declaration';
   delete testNode.returnType.precision;
   testNode.body = {
     type: 'scope',
     statements: []
   };
-  assertEquals('int foo(const in highp int x[4],int y){}',
-               glslunit.Generator.getSourceCode(testNode));
+  expectEq('int foo(const in highp int x[4],int y){}',
+      glslunit.Generator.getSourceCode(testNode));
   testNode.body.statements = [
     {
       type: 'return',
@@ -700,11 +765,14 @@ function testFunction() {
        }
     }
   ];
-  assertEquals('int foo(const in highp int x[4],int y){return false;i++;}',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('int foo(const in highp int x[4],int y){return false;i++;}',
+      glslunit.Generator.getSourceCode(testNode));
+};
 
-function testInvariant() {
+/**
+ * Test case testInvariant
+ */
+GlslGeneratorTest.prototype.testInvariant = function() {
   var testNode = {
     type: 'invariant',
     identifiers: [
@@ -718,21 +786,26 @@ function testInvariant() {
        }
     ]
   };
-  assertEquals('invariant foo,bar;',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('invariant foo,bar;', glslunit.Generator.getSourceCode(testNode));
+};
 
-function testPrecision() {
+/**
+ * Test case testPrecision
+ */
+GlslGeneratorTest.prototype.testPrecision = function() {
   var testNode = {
     type: 'precision',
     precision: 'highp',
     typeName: 'float'
   };
-  assertEquals('precision highp float;',
-               glslunit.Generator.getSourceCode(testNode));
-}
+  expectEq('precision highp float;',
+      glslunit.Generator.getSourceCode(testNode));
+};
 
-function testStructDefinition() {
+/**
+ * Test case testStructDefinition
+ */
+GlslGeneratorTest.prototype.testStructDefinition = function() {
   var testNode = {
       type: 'struct_definition',
       members: [
@@ -781,11 +854,11 @@ function testStructDefinition() {
          }
       ]
    };
-   assertEquals('attribute struct testStruct{int x;int y;}z;',
-                glslunit.Generator.getSourceCode(testNode));
+   expectEq('attribute struct testStruct{int x;int y;}z;',
+       glslunit.Generator.getSourceCode(testNode));
    delete testNode.name;
    delete testNode.qualifier;
    delete testNode.declarators;
-   assertEquals('struct{int x;int y;};',
-                glslunit.Generator.getSourceCode(testNode));
-}
+   expectEq('struct{int x;int y;};',
+       glslunit.Generator.getSourceCode(testNode));
+};

@@ -21,7 +21,17 @@ goog.require('glslunit.NumberShaderVariable');
 goog.require('goog.array');
 goog.require('goog.testing.LooseMock');
 goog.require('goog.testing.StrictMock');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for NumberShaderVariableTest
+ * @constructor
+ */
+function NumberShaderVariableTest() {
+  setUp();
+}
+registerTestSuite(NumberShaderVariableTest);
+
+
 
 function setUp() {
   var func = function()  {};
@@ -40,7 +50,10 @@ function setUp() {
 }
 
 
-function testWrongBufferLength() {
+/**
+ * Test case testWrongBufferLength
+ */
+NumberShaderVariableTest.prototype.testWrongBufferLength = function() {
   var shaderVariable = new glslunit.NumberShaderVariable('foo',
     [3.14, 1.6, 2.72, 6]);
   var varType = 'vec3';
@@ -49,71 +62,71 @@ function testWrongBufferLength() {
   }
   var errorMessage = 'Error while buffering foo: Expected a variable of ' +
       'length 3 for a vec3, but got a variable of length 4';
-  assertThrows(errorMessage,
-               function() {shaderVariable.bufferData(null, null, 3, 0)});
+  expectThat(function() {shaderVariable.bufferData(null, null, 3, 0)},
+      throwsError(/.?/), errorMessage);
 
   varType = 'mat4';
   errorMessage = 'Error while buffering foo: Expected a variable of ' +
       'length 16 for a mat4, but got a variable of length 4';
-   assertThrows(errorMessage,
-                function() {shaderVariable.bufferData(null, null, 3, 0)});
+   expectThat(function() {shaderVariable.bufferData(null, null, 3, 0)},
+       throwsError(/.?/), errorMessage);
 
   varType = 'sampler2D';
   errorMessage = 'Error while buffering foo:  Expected a texture ' +
       'but got a numeric variable';
-   assertThrows(errorMessage,
-                function() {shaderVariable.bufferData(null, null, 3, 0)});
-}
+   expectThat(function() {shaderVariable.bufferData(null, null, 3, 0)},
+       throwsError(/.?/), errorMessage);
+};
 
 /**
  * Test calls to setBufferType.
  */
-function testBufferType() {
+NumberShaderVariableTest.prototype.testBufferType = function() {
   var shaderVariable = new glslunit.NumberShaderVariable(null,
                                                          [3.14, 1.6, 2.72]);
   Int32Array = function() {};
   Float32Array = function() {};
   Uint16Array = function() {};
-  assertEquals(Int32Array, shaderVariable.getBufferType_('i'));
-  assertEquals(Float32Array, shaderVariable.getBufferType_('f'));
+  expectEq(Int32Array, shaderVariable.getBufferType_('i'));
+  expectEq(Float32Array, shaderVariable.getBufferType_('f'));
   shaderVariable.setBufferType(Uint16Array);
-  assertEquals(Uint16Array, shaderVariable.getBufferType_('i'));
-}
+  expectEq(Uint16Array, shaderVariable.getBufferType_('i'));
+};
 
 /**
  * Tests that types are decomposed properly into their components.
  */
-function testDecomposeType() {
+NumberShaderVariableTest.prototype.testDecomposeType = function() {
   var decomposedType = glslunit.NumberShaderVariable.decomposeType_('float');
-  assertEquals('f', decomposedType.glslType);
-  assertEquals('1', decomposedType.size);
-  assertEquals(false, decomposedType.isMatrix);
+  expectEq('f', decomposedType.glslType);
+  expectEq('1', decomposedType.size);
+  expectEq(false, decomposedType.isMatrix);
   decomposedType = glslunit.NumberShaderVariable.decomposeType_('int');
-  assertEquals('i', decomposedType.glslType);
-  assertEquals('1', decomposedType.size);
-  assertEquals(false, decomposedType.isMatrix);
+  expectEq('i', decomposedType.glslType);
+  expectEq('1', decomposedType.size);
+  expectEq(false, decomposedType.isMatrix);
   decomposedType = glslunit.NumberShaderVariable.decomposeType_('bool');
-  assertEquals('i', decomposedType.glslType);
-  assertEquals('1', decomposedType.size);
-  assertEquals(false, decomposedType.isMatrix);
+  expectEq('i', decomposedType.glslType);
+  expectEq('1', decomposedType.size);
+  expectEq(false, decomposedType.isMatrix);
   decomposedType = glslunit.NumberShaderVariable.decomposeType_('vec3');
-  assertEquals('f', decomposedType.glslType);
-  assertEquals('3', decomposedType.size);
-  assertEquals(false, decomposedType.isMatrix);
+  expectEq('f', decomposedType.glslType);
+  expectEq('3', decomposedType.size);
+  expectEq(false, decomposedType.isMatrix);
   decomposedType = glslunit.NumberShaderVariable.decomposeType_('bvec4');
-  assertEquals('i', decomposedType.glslType);
-  assertEquals('4', decomposedType.size);
-  assertEquals(false, decomposedType.isMatrix);
+  expectEq('i', decomposedType.glslType);
+  expectEq('4', decomposedType.size);
+  expectEq(false, decomposedType.isMatrix);
   decomposedType = glslunit.NumberShaderVariable.decomposeType_('mat4');
-  assertEquals('f', decomposedType.glslType);
-  assertEquals('4', decomposedType.size);
-  assertEquals(true, decomposedType.isMatrix);
-}
+  expectEq('f', decomposedType.glslType);
+  expectEq('4', decomposedType.size);
+  expectEq(true, decomposedType.isMatrix);
+};
 
 /**
  * Tests that Attributes get buffered properly.
  */
-function testAttributeBuffer() {
+NumberShaderVariableTest.prototype.testAttributeBuffer = function() {
   var shaderVariable = new glslunit.NumberShaderVariable(null,
                                                          [3.14, 1.6, 2.72]);
   var varType = 'vec3';
@@ -138,10 +151,9 @@ function testAttributeBuffer() {
                        goog.testing.mockmatchers.isObject,
                        webglMock.STATIC_DRAW).
     $does(function(unused_1, valuesArray, unused_2) {
-      assertTrue(goog.array.equals([3.14, 1.6, 2.72,
+      expectTrue(goog.array.equals([3.14, 1.6, 2.72,
                                     3.14, 1.6, 2.72,
-                                    3.14, 1.6, 2.72],
-                                    valuesArray));
+                                    3.14, 1.6, 2.72], valuesArray));
     });
   webglMock.bindBuffer(webglMock.ARRAY_BUFFER, null);
   webglMock.bindBuffer(webglMock.ARRAY_BUFFER, testBuffer);
@@ -155,13 +167,13 @@ function testAttributeBuffer() {
   shaderVariable.bindData(webglMock, null);
   shaderVariable.cleanUp(webglMock);
   webglMock.$verify();
-}
+};
 
 
 /**
  * Tests that Uniforms get buffered properly.
  */
-function testUniformBuffer() {
+NumberShaderVariableTest.prototype.testUniformBuffer = function() {
   var shaderVariable = new glslunit.NumberShaderVariable(null, [3.14]);
   var varType = 'float';
   var testLocation = {};
@@ -181,9 +193,9 @@ function testUniformBuffer() {
   webglMock.uniform1fv(goog.testing.mockmatchers.isObject,
                        goog.testing.mockmatchers.isObject)
       .$does(function(location, testArray) {
-         assertEquals(testLocation, location);
-         assertEquals(1, testArray.length);
-         assertEquals(3.14, testArray[0]);
+         expectEq(testLocation, location);
+         expectEq(1, testArray.length);
+         expectEq(3.14, testArray[0]);
        });
   webglMock.$replay();
 
@@ -195,9 +207,9 @@ function testUniformBuffer() {
   webglMock.uniform1iv(goog.testing.mockmatchers.isObject,
                        goog.testing.mockmatchers.isObject)
       .$does(function(location, testArray) {
-         assertEquals(testLocation, location);
-         assertEquals(1, testArray.length);
-         assertEquals(3.14, testArray[0]);
+         expectEq(testLocation, location);
+         expectEq(1, testArray.length);
+         expectEq(3.14, testArray[0]);
        });
   webglMock.$replay();
 
@@ -216,13 +228,13 @@ function testUniformBuffer() {
                              false,
                              goog.testing.mockmatchers.isObject)
       .$does(function(location, unused, testArray) {
-         assertEquals(testLocation, location);
-         assertEquals(16, testArray.length);
-         assertTrue(goog.array.equals(testArray, inputArray));
+         expectEq(testLocation, location);
+         expectEq(16, testArray.length);
+         expectTrue(goog.array.equals(testArray, inputArray));
        });
   webglMock.$replay();
 
   shaderVariable.bufferData(webglMock, null, 3, 0);
   shaderVariable.cleanUp(webglMock);
   webglMock.$verify();
-}
+};

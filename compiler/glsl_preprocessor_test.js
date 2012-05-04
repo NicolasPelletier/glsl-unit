@@ -10,7 +10,17 @@ goog.require('glslunit.compiler.Compiler');
 goog.require('glslunit.compiler.GlslPreprocessor');
 goog.require('glslunit.compiler.Preprocessor');
 goog.require('glslunit.compiler.ShaderProgram');
-goog.require('goog.testing.jsunit');
+
+
+/**
+ * Constructor for GlslPreprocessorTest
+ * @constructor
+ */
+function GlslPreprocessorTest() {
+  setUp();
+}
+registerTestSuite(GlslPreprocessorTest);
+
 
 
 function setUp() {
@@ -79,7 +89,10 @@ function setUp() {
     '}';
 }
 
-function testParseDefinitions() {
+/**
+ * Test case testParseDefinitions
+ */
+GlslPreprocessorTest.prototype.testParseDefinitions = function() {
   var expectedResult =
     'precision highp float;\n' +
     '#ifndef DEFAULT_MODE\n' +
@@ -113,12 +126,15 @@ function testParseDefinitions() {
       new glslunit.compiler.GlslPreprocessor(
           ['DEFAULT_MODE'], ['GL_ES'], true, true));
   shaderProgram = compiler.compileProgram();
-  assertEquals(expectedResult,
-               glslunit.Generator.getSourceCode(shaderProgram.vertexAst));
-}
+  expectEq(expectedResult,
+      glslunit.Generator.getSourceCode(shaderProgram.vertexAst));
+};
 
 
-function testElif() {
+/**
+ * Test case testElif
+ */
+GlslPreprocessorTest.prototype.testElif = function() {
   var shaderSource =
     '//! MODE VERTEX_TEXTURES\n' +
     '#if 1\n' +
@@ -168,5 +184,5 @@ function testElif() {
       glslunit.compiler.Preprocessor.ParseFile('test', {'test': shaderSource});
   var resultAst = glslunit.compiler.GlslPreprocessor.preprocessAst(
       shaderProgram.vertexAst, shaderProgram.shaderModes, 'vertex_start');
-  assertEquals(expectedResult, glslunit.Generator.getSourceCode(resultAst));
-}
+  expectEq(expectedResult, glslunit.Generator.getSourceCode(resultAst));
+};

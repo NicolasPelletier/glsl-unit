@@ -21,7 +21,20 @@ goog.require('glslunit.Generator');
 goog.require('glslunit.QualifierTransformer');
 goog.require('glslunit.glsl.parser');
 
-function testQualiferTransformer() {
+/**
+ * Constructor for QualifierTransformerTest
+ * @constructor
+ */
+function QualifierTransformerTest() {
+}
+registerTestSuite(QualifierTransformerTest);
+
+
+
+/**
+ * Test case testQualiferTransformer
+ */
+QualifierTransformerTest.prototype.testQualiferTransformer = function() {
   var testSource =
       'attribute vec3 leaveMe;' +
       'uniform mat2 notMeEither;' +
@@ -33,6 +46,6 @@ function testQualiferTransformer() {
   var testAst = glslunit.glsl.parser.parse(testSource);
   var transformer = new glslunit.QualifierTransformer('varying', 'uniform');
   var result = transformer.transformNode(testAst);
-  assertEquals(expectedSource, glslunit.Generator.getSourceCode(result));
-  assertEquals(testSource, glslunit.Generator.getSourceCode(testAst));
-}
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(result));
+  expectEq(testSource, glslunit.Generator.getSourceCode(testAst));
+};

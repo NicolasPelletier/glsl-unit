@@ -24,11 +24,23 @@ goog.require('glslunit.testing.ComparisonExpectation');
 goog.require('glslunit.testing.ValueBeingTested');
 goog.require('goog.testing.LooseMock');
 goog.require('goog.testing.StrictMock');
-goog.require('goog.testing.jsunit');
 
 
 
-function testPass() {
+/**
+ * Constructor for ComparisonExpectationTest
+ * @constructor
+ */
+function ComparisonExpectationTest() {
+}
+registerTestSuite(ComparisonExpectationTest);
+
+
+
+/**
+ * Test case testPass
+ */
+ComparisonExpectationTest.prototype.testPass = function() {
   var testAst = glslunit.glsl.parser.parse('42.', 'assignment_expression');
 
   var testValue = new goog.testing.LooseMock(glslunit.testing.ValueBeingTested);
@@ -38,8 +50,8 @@ function testPass() {
   var testExecutor = new goog.testing.LooseMock(glslunit.Executor);
   testExecutor.extractValue(goog.testing.mockmatchers.isObject)
       .$does(function(extractAst) {
-        assertEquals('!(abs(42.-66.)<=0.)',
-                     glslunit.Generator.getSourceCode(extractAst));
+        expectEq('!(abs(42.-66.)<=0.)',
+            glslunit.Generator.getSourceCode(extractAst));
         return 0.99;
       });
   testExecutor.$replay();
@@ -47,10 +59,13 @@ function testPass() {
   var testComp = new glslunit.testing.ComparisonExpectation(testValue);
   testComp.getTest().notEqual(66);
   testComp.run(testExecutor);
-  assertTrue(testComp.getTestPassed());
-}
+  expectTrue(testComp.getTestPassed());
+};
 
-function testFail() {
+/**
+ * Test case testFail
+ */
+ComparisonExpectationTest.prototype.testFail = function() {
   var testAst = glslunit.glsl.parser.parse('42.', 'assignment_expression');
 
   var testValue = new goog.testing.LooseMock(glslunit.testing.ValueBeingTested);
@@ -60,8 +75,8 @@ function testFail() {
   var testExecutor = new goog.testing.StrictMock(glslunit.Executor);
   testExecutor.extractValue(goog.testing.mockmatchers.isObject)
       .$does(function(extractAst) {
-        assertEquals('!(abs(42.-42.)<=0.)',
-                     glslunit.Generator.getSourceCode(extractAst));
+        expectEq('!(abs(42.-42.)<=0.)',
+            glslunit.Generator.getSourceCode(extractAst));
         return 0.0001;
       });
   testExecutor.extractValue(testAst, undefined).$returns(42);
@@ -70,25 +85,29 @@ function testFail() {
   var testComp = new glslunit.testing.ComparisonExpectation(testValue);
   testComp.getTest().notEqual(42);
   testComp.run(testExecutor);
-  assertFalse(testComp.getTestPassed());
+  expectFalse(testComp.getTestPassed());
   var failureString =
     'Expected 42. != 42 with allowable error of 0, was 42';
-  assertEquals(failureString, testComp.getFailureString());
-}
+  expectEq(failureString, testComp.getFailureString());
+};
 
-function testArrayFail() {
+/**
+ * Test case testArrayFail
+ */
+ComparisonExpectationTest.prototype.testArrayFail = function() {
   var testAst = glslunit.glsl.parser.parse('foo',
                                            'assignment_expression');
 
-  var testValue = new goog.testing.StrictMock(glslunit.testing.ValueBeingTested);
+  var testValue = new goog.testing.StrictMock(
+      glslunit.testing.ValueBeingTested);
   testValue.getValueAst().$returns(testAst).$times(3);
   testValue.$replay();
 
   var testExecutor = new goog.testing.StrictMock(glslunit.Executor);
   testExecutor.extractValue(goog.testing.mockmatchers.isObject).
       $does(function(extractAst) {
-        assertEquals('all(lessThanEqual(abs(foo-vec2(42.,24.)),vec2(0.,0.)))',
-          glslunit.Generator.getSourceCode(extractAst));
+        expectEq('all(lessThanEqual(abs(foo-vec2(42.,24.)),vec2(0.,0.)))',
+            glslunit.Generator.getSourceCode(extractAst));
         return 0;
       });
   testExecutor.extractValue(goog.testing.mockmatchers.isObject, undefined).
@@ -100,13 +119,16 @@ function testArrayFail() {
   var testComp = new glslunit.testing.ComparisonExpectation(testValue);
   testComp.getTest().equal([42., 24.]);
   testComp.run(testExecutor);
-  assertFalse(testComp.getTestPassed());
+  expectFalse(testComp.getTestPassed());
   var failureString =
     'Expected foo == 42,24 with allowable error of 0, was 0.4,0.4';
-  assertEquals(failureString, testComp.getFailureString());
-}
+  expectEq(failureString, testComp.getFailureString());
+};
 
-function testMismatch() {
+/**
+ * Test case testMismatch
+ */
+ComparisonExpectationTest.prototype.testMismatch = function() {
   var testAst = glslunit.glsl.parser.parse('42.', 'assignment_expression');
 
   var testValue = new goog.testing.LooseMock(glslunit.testing.ValueBeingTested);
@@ -116,8 +138,8 @@ function testMismatch() {
   var testExecutor = new goog.testing.StrictMock(glslunit.Executor);
   testExecutor.extractValue(goog.testing.mockmatchers.isObject)
       .$does(function(extractAst) {
-        assertEquals('!(abs(42.-42.)<=0.)',
-                     glslunit.Generator.getSourceCode(extractAst));
+        expectEq('!(abs(42.-42.)<=0.)',
+            glslunit.Generator.getSourceCode(extractAst));
         return glslunit.Executor.DecodeStatus.MISMATCH;
       });
   testExecutor.extractValue(testAst, 0).$returns(42);
@@ -128,7 +150,7 @@ function testMismatch() {
   var testComp = new glslunit.testing.ComparisonExpectation(testValue);
   testComp.getTest().notEqual(42);
   testComp.run(testExecutor);
-  assertFalse(testComp.getTestPassed());
+  expectFalse(testComp.getTestPassed());
   var failureString =
     'There was a mismatch between values at each test vertex.  This should ' +
     'not happen and usually indicates a driver bug.\n' +
@@ -136,10 +158,13 @@ function testMismatch() {
     '\tVertex 0 had value 42\n' +
     '\tVertex 1 had value 39\n' +
     '\tVertex 2 had value 42';
-  assertEquals(failureString, testComp.getFailureString());
-}
+  expectEq(failureString, testComp.getFailureString());
+};
 
-function testMismatchOnExtract() {
+/**
+ * Test case testMismatchOnExtract
+ */
+ComparisonExpectationTest.prototype.testMismatchOnExtract = function() {
   var testAst = glslunit.glsl.parser.parse('42.', 'assignment_expression');
 
   var testValue = new goog.testing.LooseMock(glslunit.testing.ValueBeingTested);
@@ -160,7 +185,7 @@ function testMismatchOnExtract() {
   var testComp = new glslunit.testing.ComparisonExpectation(testValue);
   testComp.getTest().notEqual(42);
   testComp.run(testExecutor);
-  assertFalse(testComp.getTestPassed());
+  expectFalse(testComp.getTestPassed());
   var failureString =
     'There was a mismatch between values at each test vertex.  This should ' +
     'not happen and usually indicates a driver bug.\n' +
@@ -168,5 +193,5 @@ function testMismatchOnExtract() {
     '\tVertex 0 had value 42\n' +
     '\tVertex 1 had value 39\n' +
     '\tVertex 2 had value 42';
-  assertEquals(failureString, testComp.getFailureString());
-}
+  expectEq(failureString, testComp.getFailureString());
+};

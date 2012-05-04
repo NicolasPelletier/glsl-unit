@@ -18,12 +18,24 @@
  */
 
 goog.require('glslunit.testing.Expectation');
-goog.require('goog.testing.jsunit');
 
 
 
-function testTestExpectation() {
+/**
+ * Constructor for ExpectationTest
+ * @constructor
+ */
+function ExpectationTest() {
+}
+registerTestSuite(ExpectationTest);
+
+
+
+/**
+ * Test case testTestExpectation
+ */
+ExpectationTest.prototype.testTestExpectation = function() {
   var test = new glslunit.testing.Expectation();
   test.testPassed = true;
-  assertEquals(true, test.getTestPassed());
-}
+  expectEq(true, test.getTestPassed());
+};

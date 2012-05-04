@@ -21,38 +21,53 @@ goog.require('glslunit.Generator');
 goog.require('glslunit.glsl.parser');
 goog.require('glslunit.testing.DiscardExpectation');
 goog.require('goog.testing.LooseMock');
-goog.require('goog.testing.jsunit');
 
 
 
-function testPass() {
+/**
+ * Constructor for DiscardExpectationTest
+ * @constructor
+ */
+function DiscardExpectationTest() {
+}
+registerTestSuite(DiscardExpectationTest);
+
+
+
+/**
+ * Test case testPass
+ */
+DiscardExpectationTest.prototype.testPass = function() {
   var testExecutor = new goog.testing.LooseMock(glslunit.Executor);
   testExecutor.extractValue(goog.testing.mockmatchers.isObject)
       .$does(function(extractAst) {
-        assertEquals('vec4(0.,1.,0.,1.)',
-                     glslunit.Generator.getSourceCode(extractAst));
+        expectEq('vec4(0.,1.,0.,1.)',
+            glslunit.Generator.getSourceCode(extractAst));
         return 'discard';
       });
   testExecutor.$replay();
 
   var testComp = new glslunit.testing.DiscardExpectation();
   testComp.run(testExecutor);
-  assertTrue(testComp.getTestPassed());
-}
+  expectTrue(testComp.getTestPassed());
+};
 
-function testFail() {
+/**
+ * Test case testFail
+ */
+DiscardExpectationTest.prototype.testFail = function() {
   var testExecutor = new goog.testing.LooseMock(glslunit.Executor);
   testExecutor.extractValue(goog.testing.mockmatchers.isObject)
       .$does(function(extractAst) {
-        assertEquals('vec4(0.,1.,0.,1.)',
-                     glslunit.Generator.getSourceCode(extractAst));
+        expectEq('vec4(0.,1.,0.,1.)',
+            glslunit.Generator.getSourceCode(extractAst));
         return 42;
       });
   testExecutor.$replay();
 
   var testComp = new glslunit.testing.DiscardExpectation();
   testComp.run(testExecutor);
-  assertFalse(testComp.getTestPassed());
-  assertEquals('Expected shader would discard but it didn\'t',
-               testComp.getFailureString());
-}
+  expectFalse(testComp.getTestPassed());
+  expectEq("Expected shader would discard but it didn't",
+      testComp.getFailureString());
+};

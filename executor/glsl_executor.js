@@ -287,7 +287,7 @@ glslunit.Executor.prototype.prepareAst = function() {
   var mainPrototype = glslunit.glsl.parser.parse('void main()',
                                                  'function_prototype');
   var mainRenamer = new glslunit.FunctionRenameTransformer(mainPrototype,
-                                                           '__testMain');
+                                                           '_testMain_');
   var testAst = mainRenamer.transformNode(this.sourceAst);
   var foundMain = testAst != this.sourceAst;
 
@@ -380,9 +380,9 @@ glslunit.Executor.prototype.createTestVariables_ = function(
   // Buffer the test triangle.
   var testTriangle = new glslunit.NumberShaderVariable('aTestTriangle', null);
   var testVerticies = [
-      -1.0,  1.0, 0.0,
+      -1.0, 1.0, 0.0,
       -1.0, -1.0, 0.0,
-       1.0,  1.0, 0.0
+       1.0, 1.0, 0.0
   ];
   testTriangle.setGlobalVariables(globalVariables, this.renameMap);
   testTriangle.bufferAttribute(this.context, shaderProgram,
@@ -396,7 +396,7 @@ glslunit.Executor.prototype.createTestVariables_ = function(
   }, this);
   testTriangle.bindData(this.context, shaderProgram);
   return testTriangle;
-}
+};
 
 /**
  * Executes the test GLSL program and extracts a value from it.

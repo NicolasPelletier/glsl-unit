@@ -31,7 +31,6 @@
   /** @constructor */
   function node(extraProperties) {
     this.id = next_id++;
-    this.line = computeErrorPosition().line;
     for (var prop in extraProperties) {
         if (extraProperties.hasOwnProperty(prop)) {
           this[prop] = extraProperties[prop];
@@ -410,7 +409,7 @@ iteration_statement
   / for_loop
 
 jump_statement
-  = "return" _? expression:expression semicolon {
+  = "return" expression:expression semicolon {
       return new node({
         type: "return",
         value: expression

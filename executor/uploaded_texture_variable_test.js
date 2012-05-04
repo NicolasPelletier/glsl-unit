@@ -19,7 +19,17 @@
 
 goog.require('glslunit.UploadedTextureVariable');
 goog.require('goog.testing.LooseMock');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for UploadedTextureVariableTest
+ * @constructor
+ */
+function UploadedTextureVariableTest() {
+  setUp();
+}
+registerTestSuite(UploadedTextureVariableTest);
+
+
 
 function setUp() {
   var func = function()  {};
@@ -33,7 +43,7 @@ function setUp() {
 /**
  * Tests that Textures get buffered properly.
  */
-function testBindUploadedTexture() {
+UploadedTextureVariableTest.prototype.testBindUploadedTexture = function() {
   var varType = 'sampler2D';
   var testTexture = {};
   var testLocation = {};
@@ -65,4 +75,4 @@ function testBindUploadedTexture() {
   shaderVariable.bindData(webglMock, null);
   shaderVariable.cleanUp();
   webglMock.$verify();
-}
+};

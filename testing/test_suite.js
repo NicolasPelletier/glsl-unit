@@ -142,7 +142,7 @@ glslunit.testing.TestSuite.prototype.getTestCases = function() {
  * @return {boolean} True if all of the test cases passed, false otherwise.
  */
 glslunit.testing.TestSuite.prototype.run = function() {
-  window.testMain = goog.bind(function(description, testFn) {
+  goog.global.testMain = goog.bind(function(description, testFn) {
      var testCase = new glslunit.testing.TestCase(this.context_,
                                                   this.viewportHeight_,
                                                   this.viewportWidth_,
@@ -158,7 +158,7 @@ glslunit.testing.TestSuite.prototype.run = function() {
 
   // Run the test suite.
   this.testSuiteFn_(this.context_);
-  delete window.testMain;
+  delete goog.global.testMain;
 
   this.suitePassed_ = true;
   goog.array.forEach(this.testCases_, function(testCase) {

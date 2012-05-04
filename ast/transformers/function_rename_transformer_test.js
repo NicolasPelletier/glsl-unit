@@ -19,12 +19,21 @@
 
 goog.require('glslunit.FunctionRenameTransformer');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for FunctionRenameTransformerTest
+ * @constructor
+ */
+function FunctionRenameTransformerTest() {
+}
+registerTestSuite(FunctionRenameTransformerTest);
+
+
 
 /**
  * Tests that the FunctionRenameTransformer renames function declarations.
  */
-function testRenameFunction() {
+FunctionRenameTransformerTest.prototype.testRenameFunction = function() {
   var testSource =
     'void renameMe() {}' +
     'void renameMe(int a, int b);' +
@@ -37,27 +46,21 @@ function testRenameFunction() {
   var renameTransformer = new glslunit.FunctionRenameTransformer(targetAST,
                                                                  'YAAH');
   var transformed = renameTransformer.transformNode(testAST);
-  assertEquals('Function wasn\'t renamed',
-               'YAAH',
-               transformed.statements[0].name);
-  assertEquals('Original was renamed',
-               'renameMe',
-               testAST.statements[0].name);
-  assertEquals('Another overload of function was renamed',
-               'renameMe',
-               transformed.statements[1].name);
-  assertEquals('Non-target function renamed',
-               'butIgnoreMe',
-               transformed.statements[2].name);
-  assertEquals('Prototype wasn\'t renamed',
-               'YAAH',
-               transformed.statements[3].name);
-}
+  expectEq('YAAH', transformed.statements[0].name, "Function wasn't renamed");
+  expectEq('renameMe', testAST.statements[0].name, 'Original was renamed');
+  expectEq('renameMe',
+      transformed.statements[1].name,
+          'Another overload of function was renamed');
+  expectEq('butIgnoreMe',
+      transformed.statements[2].name, 'Non-target function renamed');
+  expectEq('YAAH',
+      transformed.statements[3].name, "Prototype wasn't renamed");
+};
 
 /**
  * Tests that the FunctionRenameTransformer renames function calls.
  */
-function testRenameFunctionCall() {
+FunctionRenameTransformerTest.prototype.testRenameFunctionCall = function() {
   var testSource =
     'void main(){' +
     '  renameMe();' +
@@ -72,16 +75,15 @@ function testRenameFunctionCall() {
   var transformed = renameTransformer.transformNode(testAST);
   var transformedStatements = transformed.statements[0].body.statements;
   var originalStatements = testAST.statements[0].body.statements;
-  assertEquals('Function wasn\'t renamed',
-               'YAAH',
-               transformedStatements[0].expression.function_name);
-  assertEquals('Original was renamed',
-               'renameMe',
-               originalStatements[0].expression.function_name);
-  assertEquals('Non-target function was renamed',
-               'ignoreMe',
-               transformedStatements[1].expression.function_name);
-  assertEquals('Another overload function was renamed',
-               'renameMe',
-               transformedStatements[2].expression.function_name);
-}
+  expectEq('YAAH',
+      transformedStatements[0].expression.function_name,
+          "Function wasn't renamed");
+  expectEq('renameMe',
+      originalStatements[0].expression.function_name, 'Original was renamed');
+  expectEq('ignoreMe',
+      transformedStatements[1].expression.function_name,
+          'Non-target function was renamed');
+  expectEq('renameMe',
+      transformedStatements[2].expression.function_name,
+          'Another overload function was renamed');
+};

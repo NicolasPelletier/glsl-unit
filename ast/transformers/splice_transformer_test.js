@@ -20,12 +20,21 @@
 goog.require('glslunit.Generator');
 goog.require('glslunit.SpliceTransformer');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for SpliceTransformerTest
+ * @constructor
+ */
+function SpliceTransformerTest() {
+}
+registerTestSuite(SpliceTransformerTest);
+
+
 
 /**
  * Tests that the SpliceTransformer adds nodes.
  */
-function testInsertNode() {
+SpliceTransformerTest.prototype.testInsertNode = function() {
   var testSource =
     'void heyItsAFunction() {}';
 
@@ -37,15 +46,15 @@ function testInsertNode() {
   var transformed = glslunit.SpliceTransformer.splice(
     testAST, target, 'statements', 0, 0, [newNode]);
 
-  assertEquals("New Node shouldn't have been modified", oldId, newNode.id);
-  assertNotEquals(testAST, transformed);
-  assertEquals(1, transformed.statements[0].body.statements.length);
-}
+  expectEq(oldId, newNode.id, "New Node shouldn't have been modified");
+  expectNe(testAST, transformed);
+  expectEq(1, transformed.statements[0].body.statements.length);
+};
 
 /**
  * Tests that the SpliceTransformer adds nodes.
  */
-function testSpliceNode() {
+SpliceTransformerTest.prototype.testSpliceNode = function() {
   var testSource =
     'void heyItsAFunction(){y++;}';
   var expectedSource =
@@ -58,15 +67,15 @@ function testSpliceNode() {
   var transformed = glslunit.SpliceTransformer.splice(
     testAST, target, 'statements', 0, 1, [newNode]);
 
-  assertEquals("New Node shouldn't have been modified", oldId, newNode.id);
-  assertNotEquals(testAST, transformed);
-  assertEquals(expectedSource, glslunit.Generator.getSourceCode(transformed));
-}
+  expectEq(oldId, newNode.id, "New Node shouldn't have been modified");
+  expectNe(testAST, transformed);
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(transformed));
+};
 
 /**
  * Tests that the SpliceTransformer throws on bad input.
  */
-function testInsertThrows() {
+SpliceTransformerTest.prototype.testInsertThrows = function() {
   var testSource =
     'void heyItsAnotherFunction() {5+6;}';
 
@@ -81,5 +90,5 @@ function testInsertThrows() {
   } catch (e) {
     threwException = true;
   }
-  assertTrue(threwException);
-}
+  expectTrue(threwException);
+};

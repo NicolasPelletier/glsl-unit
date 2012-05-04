@@ -8,7 +8,17 @@
 goog.require('glslunit.Generator');
 goog.require('glslunit.compiler.BraceReducer');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+
+
+/**
+ * Constructor for BraceReducerTest
+ * @constructor
+ */
+function BraceReducerTest() {
+  setUp();
+}
+registerTestSuite(BraceReducerTest);
 
 
 
@@ -33,7 +43,10 @@ function setUp() {
 }
 
 
-function testConstructorMinifier() {
+/**
+ * Test case testConstructorMinifier
+ */
+BraceReducerTest.prototype.testConstructorMinifier = function() {
   var expectedSource =
       'void main(){' +
       'for(int i=0;i<10;++i)' +
@@ -52,6 +65,6 @@ function testConstructorMinifier() {
   var minifier = new glslunit.compiler.BraceReducer();
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);
-  assertNotEquals(inputNode, newNode);
-  assertEquals(expectedSource, glslunit.Generator.getSourceCode(newNode));
-}
+  expectNe(inputNode, newNode);
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(newNode));
+};

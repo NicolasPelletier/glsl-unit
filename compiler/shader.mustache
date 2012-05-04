@@ -2,6 +2,10 @@
 /** @author({{templateProperties.author}}) */
 {{/templateProperties.author}}
 
+{{#licenses}}
+{{{.}}}
+{{/licenses}}
+
 goog.provide('{{namespace}}.{{className}}');
 {{#superClass}}
 goog.require('{{namespace}}.{{superClass}}');
@@ -23,9 +27,29 @@ goog.require('{{.}}');
  */
 {{namespace}}.{{className}}.JS_CONST =
 {{#jsConsts}}
-  '#define {{value}} ' + ({{expression}}) + '\n' +
+  '#define ' + (goog.DEBUG ? '{{originalName}}' : '{{shortName}}') + ' ' +
+  ({{expression}}) + '\n' +
 {{/jsConsts}}
   '';
+
+
+/**
+ * The original vertex source code.
+ * @type {string}
+ * @const
+ */
+{{namespace}}.{{className}}.DEBUG_VERTEX_SOURCE =
+    '{{{getOriginalVertexSource}}}';
+
+
+/**
+ * The optimized vertex source code.
+ * @type {string}
+ * @const
+ */
+{{namespace}}.{{className}}.OPTIMIZED_VERTEX_SOURCE =
+    '{{{getVertexSource}}}';
+
 
 /**
  * The vertex source code.
@@ -33,7 +57,27 @@ goog.require('{{.}}');
  * @const
  */
 {{namespace}}.{{className}}.VERTEX_SOURCE =
-    {{namespace}}.{{className}}.JS_CONST + '{{{getVertexSource}}}';
+    {{namespace}}.{{className}}.JS_CONST +
+        (goog.DEBUG ? {{namespace}}.{{className}}.DEBUG_VERTEX_SOURCE :
+                      {{namespace}}.{{className}}.OPTIMIZED_VERTEX_SOURCE);
+
+/**
+ * The original vertex source code.
+ * @type {string}
+ * @const
+ */
+{{namespace}}.{{className}}.DEBUG_FRAGMENT_SOURCE =
+    '{{{getOriginalFragmentSource}}}';
+
+
+/**
+ * The optimized vertex source code.
+ * @type {string}
+ * @const
+ */
+{{namespace}}.{{className}}.OPTIMIZED_FRAGMENT_SOURCE =
+    '{{{getFragmentSource}}}';
+
 
 /**
  * The fragment source code.
@@ -41,7 +85,10 @@ goog.require('{{.}}');
  * @const
  */
 {{namespace}}.{{className}}.FRAGMENT_SOURCE =
-        {{namespace}}.{{className}}.JS_CONST + '{{{getFragmentSource}}}';
+        {{namespace}}.{{className}}.JS_CONST +
+        (goog.DEBUG ? {{namespace}}.{{className}}.DEBUG_FRAGMENT_SOURCE :
+                      {{namespace}}.{{className}}.OPTIMIZED_FRAGMENT_SOURCE);
+
 
 /**
  * Map of uniform original name to its minified name.
@@ -56,7 +103,8 @@ goog.require('{{.}}');
  * @type {string}
  * @const
  */
-{{namespace}}.{{className}}.uniform.{{originalName}} = '{{shortName}}';
+{{namespace}}.{{className}}.uniform.{{originalName}} = goog.DEBUG ?
+    '{{originalName}}' : '{{shortName}}';
 {{/getUniforms}}
 
 
@@ -73,5 +121,6 @@ goog.require('{{.}}');
  * @type {string}
  * @const
  */
-{{namespace}}.{{className}}.attribute.{{originalName}} = '{{shortName}}';
+{{namespace}}.{{className}}.attribute.{{originalName}} = goog.DEBUG ?
+    '{{originalName}}' : '{{shortName}}';
 {{/getAttributes}}

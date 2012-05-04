@@ -301,18 +301,11 @@ glslunit.compiler.VariableMinifier.prototype.beforeTransformDeclaratorItem =
   if (this.shaderProgram_ && this.currentDeclaratorNode_) {
     var nodeType = this.currentDeclaratorNode_.typeAttribute.name;
     if (qualifier == 'attribute') {
-      var attributeEntry = new glslunit.compiler.ShaderAttributeEntry();
+      var attributeEntry = this.shaderProgram_.attributeMap[node.name.name];
       attributeEntry.shortName = newName;
-      attributeEntry.originalName = node.name.name;
-      var parsedSize = parseInt(nodeType.slice(3, 4), 10);
-      attributeEntry.variableSize = isNaN(parsedSize) ? 1 : parsedSize;
-      this.shaderProgram_.attributeMap[node.name.name] = attributeEntry;
     } else if (qualifier == 'uniform') {
-      var uniformEntry = new glslunit.compiler.ShaderUniformEntry();
-      uniformEntry.originalName = node.name.name;
+      var uniformEntry = this.shaderProgram_.uniformMap[node.name.name];
       uniformEntry.shortName = newName;
-      uniformEntry.type = nodeType;
-      this.shaderProgram_.uniformMap[node.name.name] = uniformEntry;
     }
   }
   return node;

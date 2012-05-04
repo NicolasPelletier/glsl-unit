@@ -19,7 +19,20 @@
 
 goog.require('glslunit.ReplaceAttributeTransformer');
 
-function testReplaceAttribute() {
+/**
+ * Constructor for ReplaceAttributeTransformerTest
+ * @constructor
+ */
+function ReplaceAttributeTransformerTest() {
+}
+registerTestSuite(ReplaceAttributeTransformerTest);
+
+
+
+/**
+ * Test case testReplaceAttribute
+ */
+ReplaceAttributeTransformerTest.prototype.testReplaceAttribute = function() {
   var testSource =
     'attribute vec3 foo, bar, raz;' +
     'void main() {' +
@@ -32,11 +45,14 @@ function testReplaceAttribute() {
     '}';
   var actualSource = glslunit.ReplaceAttributeTransformer.replaceAttributes(
     testSource, {bar: [1, 2, 3]});
-  assertEquals(expectedSource,
-               actualSource);
-}
+  expectEq(expectedSource, actualSource);
+};
 
-function testReplaceAttributeRemoveDeclaration() {
+/**
+ * Test case testReplaceAttributeRemoveDeclaration
+ */
+ReplaceAttributeTransformerTest.prototype.
+    testReplaceAttributeRemoveDeclaration = function() {
   var testSource =
     'attribute vec3 bar;' +
     'void main() {' +
@@ -48,11 +64,14 @@ function testReplaceAttributeRemoveDeclaration() {
     '}';
   var actualSource = glslunit.ReplaceAttributeTransformer.replaceAttributes(
     testSource, {bar: [1, 2, 3]});
-  assertEquals(expectedSource,
-               actualSource);
-}
+  expectEq(expectedSource, actualSource);
+};
 
-function testReplaceAttributeRedeclareParameter() {
+/**
+ * Test case testReplaceAttributeRedeclareParameter
+ */
+ReplaceAttributeTransformerTest.prototype.
+    testReplaceAttributeRedeclareParameter = function() {
   var testSource =
     'attribute vec3 bar;' +
     'void main(vec3 bar) {' +
@@ -64,11 +83,14 @@ function testReplaceAttributeRedeclareParameter() {
     '}';
   var actualSource = glslunit.ReplaceAttributeTransformer.replaceAttributes(
     testSource, {bar: [1, 2, 3]});
-  assertEquals(expectedSource,
-               actualSource);
-}
+  expectEq(expectedSource, actualSource);
+};
 
-function testReplaceAttributeRedeclareLocal() {
+/**
+ * Test case testReplaceAttributeRedeclareLocal
+ */
+ReplaceAttributeTransformerTest.prototype.
+    testReplaceAttributeRedeclareLocal = function() {
   var testSource =
     'attribute float bar, raz, meh;' +
     'void main() {' +
@@ -85,6 +107,5 @@ function testReplaceAttributeRedeclareLocal() {
     '}';
   var actualSource = glslunit.ReplaceAttributeTransformer.replaceAttributes(
     testSource, {bar: [42]});
-  assertEquals(expectedSource,
-               actualSource);
-}
+  expectEq(expectedSource, actualSource);
+};

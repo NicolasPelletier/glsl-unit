@@ -12,9 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-goog.require("glslunit.utils");
+goog.require('glslunit.utils');
 
-function testGetFunctionSuffix() {
-  assertEquals("Hello", glslunit.utils.getFunctionSuffix("hello"));
-  assertEquals("HelloWorld", glslunit.utils.getFunctionSuffix("hello_world"));
+/**
+ * Constructor for UtilsTest
+ * @constructor
+ */
+function UtilsTest() {
 }
+registerTestSuite(UtilsTest);
+
+
+
+/**
+ * Test case testGetFunctionSuffix
+ */
+UtilsTest.prototype.testGetFunctionSuffix = function() {
+  expectEq('Hello', glslunit.utils.getFunctionSuffix('hello'));
+  expectEq('HelloWorld', glslunit.utils.getFunctionSuffix('hello_world'));
+};

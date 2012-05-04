@@ -8,7 +8,17 @@
 goog.require('glslunit.Generator');
 goog.require('glslunit.compiler.DeclarationConsolidation');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+
+
+/**
+ * Constructor for DeclarationConsolidationTest
+ * @constructor
+ */
+function DeclarationConsolidationTest() {
+  setUp();
+}
+registerTestSuite(DeclarationConsolidationTest);
 
 
 
@@ -48,7 +58,11 @@ function setUp() {
 
 
 
-function testDeclarationConsolidation() {
+/**
+ * Test case testDeclarationConsolidation
+ */
+DeclarationConsolidationTest.prototype.
+    testDeclarationConsolidation = function() {
   var expectedSource =
     // These should be two separate declarations since one is an attribute and
     // the other is not.
@@ -85,12 +99,16 @@ function testDeclarationConsolidation() {
   var minifier = new glslunit.compiler.DeclarationConsolidation(false);
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);
-  assertNotEquals(inputNode, newNode);
-  assertEquals(expectedSource, glslunit.Generator.getSourceCode(newNode));
-}
+  expectNe(inputNode, newNode);
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(newNode));
+};
 
 
-function testDeclarationConsolidationAttributes() {
+/**
+ * Test case testDeclarationConsolidationAttributes
+ */
+DeclarationConsolidationTest.prototype.
+    testDeclarationConsolidationAttributes = function() {
   var expectedSource =
     // These should be two separate declarations since one is an attribute and
     // the other is not.
@@ -125,6 +143,6 @@ function testDeclarationConsolidationAttributes() {
   var minifier = new glslunit.compiler.DeclarationConsolidation(true);
   var inputNode = glslunit.glsl.parser.parse(inputSource);
   var newNode = minifier.transformNode(inputNode);
-  assertNotEquals(inputNode, newNode);
-  assertEquals(expectedSource, glslunit.Generator.getSourceCode(newNode));
-}
+  expectNe(inputNode, newNode);
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(newNode));
+};

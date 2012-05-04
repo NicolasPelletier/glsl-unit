@@ -110,7 +110,7 @@ glslunit.VertexExecutor.prototype.getVertexAst = function(extractionTargetAst) {
   var mainFunc = goog.string.format(
     glslunit.Executor.testTriangleSource +
     'void main() {' +
-    (foundMain ? '  __testMain();' : '') +
+    (foundMain ? '  _testMain_();' : '') +
     '  vResultColor = encodeFloat(float(%s));' +
     '  gl_Position = vec4(aTestTriangle, 1.);' +
     '}', glslunit.Generator.getSourceCode(extractionTargetAst));

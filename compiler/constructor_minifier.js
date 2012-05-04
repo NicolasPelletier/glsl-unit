@@ -78,7 +78,7 @@ glslunit.compiler.ConstructorMinifier.prototype.parentIsConstructor_ =
   return parentNode.type == 'function_call' &&
       parentNode.function_name in
           glslunit.compiler.ConstructorMinifier.CONVERSION_FUNCTIONS_;
-}
+};
 
 /**
  * If able to, converts a node to an integer.
@@ -224,3 +224,4 @@ glslunit.compiler.ConstructorMinifier.prototype.performStep =
       fragmentTransformer.transformNode(shaderProgram.fragmentAst);
   return [];
 };
+

@@ -22,12 +22,21 @@ goog.require('glslunit.FragmentExecutor');
 goog.require('glslunit.Generator');
 goog.require('glslunit.NodeCollector');
 goog.require('glslunit.glsl.parser');
-goog.require('goog.testing.jsunit');
+
+/**
+ * Constructor for GlslFragmentExecutorTest
+ * @constructor
+ */
+function GlslFragmentExecutorTest() {
+}
+registerTestSuite(GlslFragmentExecutorTest);
+
+
 
 /**
  * Tests that the fragment AST can be fetched and is correct.
  */
-function testGetVertexAst() {
+GlslFragmentExecutorTest.prototype.testGetVertexAst = function() {
   var testSource =
     'uniform vec2 fooBar;' +
     'varying vec2 raz;';
@@ -40,15 +49,15 @@ function testGetVertexAst() {
     return node.type == 'declarator' &&
            node.typeAttribute.qualifier == 'attribute';
   });
-  assertEquals(1, attributes.length);
-}
+  expectEq(1, attributes.length);
+};
 
 
 
 /**
  * Tests that the vertex AST is properly instrumented with test code.
  */
-function testGetFragmentAst() {
+GlslFragmentExecutorTest.prototype.testGetFragmentAst = function() {
   var testSource =
     'void main() {' +
     '  someValue = gl_FrontFacing + gl_PointCoord + ' +
@@ -62,18 +71,18 @@ function testGetFragmentAst() {
                                                    null, null);
 
   var fragmentAst = testExecutor.getFragmentAst(extractionAst);
-  assertEquals('Orignal shouldn\'t have been transformed',
-               1, testAst.statements.length);
+  expectEq(1,
+      testAst.statements.length, "Orignal shouldn't have been transformed");
 
-  assertEquals('Encoding code not added',
-               'upper_mask', fragmentAst.statements[1].name);
+  expectEq('upper_mask',
+      fragmentAst.statements[1].name, 'Encoding code not added');
 
   var uniforms = glslunit.NodeCollector.collectNodes(fragmentAst,
     function(node) {
       return node.type == 'declarator' &&
              node.typeAttribute.qualifier == 'uniform';
     });
-  assertEquals('Mock Uniforms for built-ins not added', 3, uniforms.length);
+  expectEq(3, uniforms.length, 'Mock Uniforms for built-ins not added');
 
   var assignments = glslunit.NodeCollector.collectNodes(fragmentAst,
     function(node) {
@@ -81,23 +90,22 @@ function testGetFragmentAst() {
              node.operator.operator == '=' && node.left &&
              node.left.name == 'someValue';
     });
-  assertEquals('Couldn\t find original assignments.', 1, assignments.length);
+  expectEq(1, assignments.length, 'Couldn\t find original assignments.');
   var expectedSource =
-    'someValue=__gl_FrontFacing+__gl_PointCoord+' +
-    '__gl_FragCoord+vec(1.,2.,3.,4.)';
+    'someValue=_gl_FrontFacing_+_gl_PointCoord_+' +
+    '_gl_FragCoord_+vec(1.,2.,3.,4.)';
 
-  assertEquals(expectedSource,
-               glslunit.Generator.getSourceCode(assignments[0]));
+  expectEq(expectedSource, glslunit.Generator.getSourceCode(assignments[0]));
 
   var resultSource = glslunit.Generator.getSourceCode(fragmentAst);
-  assertNotEquals(-1, resultSource.search('__testMain'));
-}
+  expectNe(-1, resultSource.search('_testMain_'));
+};
 
 
 /**
  * Tests that the vertex AST is properly instrumented with test code.
  */
-function testNoMainFunction() {
+GlslFragmentExecutorTest.prototype.testNoMainFunction = function() {
   var testSource = 'attribute vec4 someAttr;';
   var testAst = glslunit.glsl.parser.parse(testSource);
   var testExecutor = new glslunit.FragmentExecutor(null, testAst, null,
@@ -107,5 +115,5 @@ function testNoMainFunction() {
                                                  'assignment_expression');
   var transformedAst = testExecutor.getFragmentAst(extractionAst);
   var resultSource = glslunit.Generator.getSourceCode(transformedAst);
-  assertEquals(-1, resultSource.search('__testMain'));
-}
+  expectEq(-1, resultSource.search('_testMain_'));
+};

@@ -57,7 +57,7 @@ glslunit.FragmentExecutor = function(context,
   var nameMap = {};
   goog.array.forEach(glslunit.utils.BUILT_IN_GLOBALS, function(globalAst) {
     var globalName = globalAst.declarators[0].name.name;
-    var newName = '__' + globalName;
+    var newName = '_' + globalName + '_';
     var nextAst =
       glslunit.IdentifierRenameTransformer.renameVariable(currentAst,
                                                           globalName,
@@ -131,7 +131,7 @@ glslunit.FragmentExecutor.prototype.getFragmentAst =
   // Create the new main function
   var mainFunc = goog.string.format(
     'void main() {' +
-    (foundMain ? '  __testMain();' : '') +
+    (foundMain ? '  _testMain_();' : '') +
     '  gl_FragColor = encodeFloat(float(%s));' +
     '}', glslunit.Generator.getSourceCode(extractionTargetAst));
   var mainAst = glslunit.glsl.parser.parse(mainFunc, 'fragment_start');

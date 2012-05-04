@@ -20,11 +20,23 @@
 goog.require('glslunit.Generator');
 goog.require('glslunit.testing.TestCase');
 goog.require('glslunit.testing.TestSuite');
-goog.require('goog.testing.jsunit');
 
 
 
-function testTestSuite() {
+/**
+ * Constructor for TestSuiteTest
+ * @constructor
+ */
+function TestSuiteTest() {
+}
+registerTestSuite(TestSuiteTest);
+
+
+
+/**
+ * Test case testTestSuite
+ */
+TestSuiteTest.prototype.testTestSuite = function() {
   var testContext = {};
   var testSource = 'void main(){discard;}';
   var testTestFn = function() {};
@@ -32,13 +44,13 @@ function testTestSuite() {
 
   glslunit.testing.TestCase = function(context, height, width, type,
                                sourceAst, description, testFn) {
-    assertEquals(testContext, context);
-    assertEquals(type, glslunit.testing.TestCase.TestType.FRAGMENT);
-    assertEquals(23, height);
-    assertEquals(42, width);
-    assertEquals(testSource, glslunit.Generator.getSourceCode(sourceAst));
-    assertEquals('Some Test Case', description);
-    assertEquals(testTestFn, testFn);
+    expectEq(testContext, context);
+    expectEq(type, glslunit.testing.TestCase.TestType.FRAGMENT);
+    expectEq(23, height);
+    expectEq(42, width);
+    expectEq(testSource, glslunit.Generator.getSourceCode(sourceAst));
+    expectEq('Some Test Case', description);
+    expectEq(testTestFn, testFn);
   };
   glslunit.testing.TestCase.TestType = {
     FRAGMENT: 100
@@ -54,18 +66,18 @@ function testTestSuite() {
       testContext, 23, 42, glslunit.testing.TestCase.TestType.FRAGMENT,
       'Some Sweet Test Suite', testSource,
        function() {
-    assertNotUndefined(testMain);
+    expectThat(testMain, not(isUndefined));
     testMain('Some Test Case', testTestFn);
     testMain('Some Test Case', testTestFn);
   });
 
-  assertEquals('Some Sweet Test Suite', suite.getDescription());
-  assertFalse(suite.getSuitePassed());
-  assertTrue(suite.run());
-  assertTrue(suite.getSuitePassed());
-  assertEquals(2, suite.getTestCases().length);
+  expectEq('Some Sweet Test Suite', suite.getDescription());
+  expectFalse(suite.getSuitePassed());
+  expectTrue(suite.run());
+  expectTrue(suite.getSuitePassed());
+  expectEq(2, suite.getTestCases().length);
 
   testResult = false;
-  assertFalse(suite.run());
-  assertFalse(suite.getSuitePassed());
-}
+  expectFalse(suite.run());
+  expectFalse(suite.getSuitePassed());
+};

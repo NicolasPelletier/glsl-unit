@@ -21,7 +21,17 @@ goog.require('glslunit.Generator');
 goog.require('glslunit.glsl.parser');
 goog.require('glslunit.testing.ComparisonExpectation');
 goog.require('glslunit.testing.TestCase');
-goog.require('goog.testing.jsunit');
+
+
+/**
+ * Constructor for TestCaseTest
+ * @constructor
+ */
+function TestCaseTest() {
+  setUp();
+}
+registerTestSuite(TestCaseTest);
+
 
 
 function setUp() {
@@ -38,23 +48,23 @@ function setUp() {
   // Mock out the executors and ComparisonExpectation.
   currentTestType = null;
   glslunit.VertexExecutor = function(c, s, v, h, w) {
-    assertEquals(glslunit.testing.TestCase.TestType.VERTEX, currentTestType);
-    assertEquals(c, context);
-    assertEquals(glslunit.Generator.getSourceCode(s),
+    expectEq(glslunit.testing.TestCase.TestType.VERTEX, currentTestType);
+    expectEq(c, context);
+    expectEq(glslunit.Generator.getSourceCode(s),
         glslunit.Generator.getSourceCode(testAst));
-    assertEquals(v.length, 1);
-    assertEquals(v[0].name_, 'uTestLocation');
-    assertEquals(20, h);
-    assertEquals(30, w);
+    expectEq(v.length, 1);
+    expectEq(v[0].name_, 'uTestLocation');
+    expectEq(20, h);
+    expectEq(30, w);
   };
   glslunit.FragmentExecutor = function(c, s, v, h, w) {
-    assertEquals(glslunit.testing.TestCase.TestType.FRAGMENT, currentTestType);
-    assertEquals(c, context);
-    assertEquals(s, testAst);
-    assertEquals(v.length, 1);
-    assertEquals(v[0].name_, 'uTestLocation');
-    assertEquals(20, h);
-    assertEquals(30, w);
+    expectEq(glslunit.testing.TestCase.TestType.FRAGMENT, currentTestType);
+    expectEq(c, context);
+    expectEq(s, testAst);
+    expectEq(v.length, 1);
+    expectEq(v[0].name_, 'uTestLocation');
+    expectEq(20, h);
+    expectEq(30, w);
   };
   runCount = 0;
   glslunit.testing.ComparisonExpectation.prototype.run = function() {
@@ -66,23 +76,26 @@ function setUp() {
 }
 
 
-function testVertexTestCase() {
+/**
+ * Test case testVertexTestCase
+ */
+TestCaseTest.prototype.testVertexTestCase = function() {
   // Test Vertex test cases.
   currentTestType = glslunit.testing.TestCase.TestType.VERTEX;
   var testCase = new glslunit.testing.TestCase(
       context, 20, 30,
       glslunit.testing.TestCase.TestType.VERTEX,
       testAst, 'Test TestCase!', function(gl) {
-    assertEquals(gl, context);
-    assertNotUndefined(set);
-    assertNotUndefined(expect);
-    assertUndefined(window.expectDiscard);
+    expectEq(gl, context);
+    expectThat(set, not(isUndefined));
+    expectThat(expect, not(isUndefined));
+    expectThat(goog.global.expectDiscard, isUndefined);
 
     define('FOO 0');
     define('BAR');
     var s = set('uTestLocation');
     s.asArray([1, 2, 3, 4]);
-    assertEquals('uTestLocation', s.variableName_);
+    expectEq('uTestLocation', s.variableName_);
     expect('gl_Position').equal([1, 2, 3, 4]);
     expect('gl_Position').lessThan([2, 4, 6, 8]);
   });
@@ -93,13 +106,16 @@ function testVertexTestCase() {
   testAst = glslunit.glsl.parser.parse(expectedSource);
   testCase.run();
 
-  assertTrue(testCase.getTestPassed());
-  assertEquals('Test TestCase!', testCase.getDescription());
-  assertEquals(2, runCount);
-  assertEquals(2, testCase.getExpectations().length);
-}
+  expectTrue(testCase.getTestPassed());
+  expectEq('Test TestCase!', testCase.getDescription());
+  expectEq(2, runCount);
+  expectEq(2, testCase.getExpectations().length);
+};
 
-function testFragmentTestCase() {
+/**
+ * Test case testFragmentTestCase
+ */
+TestCaseTest.prototype.testFragmentTestCase = function() {
   // Test Fragment test cases.
   currentTestType = glslunit.testing.TestCase.TestType.FRAGMENT;
   var testCase = new glslunit.testing.TestCase(
@@ -108,18 +124,19 @@ function testFragmentTestCase() {
         testAst, 'Test TestCase!', function() {
     var s = set('uTestLocation');
     s.asArray([1, 2, 3, 4]);
-    assertEquals('uTestLocation', s.variableName_);
-    assertNotUndefined(set);
-    assertNotUndefined(expect);
-    assertNotUndefined(expectDiscard);
+    expectEq('uTestLocation', s.variableName_);
+    expectThat(set, not(isUndefined));
+    expectThat(expect, not(isUndefined));
+    expectThat(expectDiscard, not(isUndefined));
 
     expect('gl_FragColor').equal([1, 2, 3, 4]);
   });
   testCase.run();
-  assertEquals(2, testCase.getTestWarnings().length);
-  assertEquals('Warning: variable "foo" was not set.  Expected input of type ' +
-               '"invariant varying float"', testCase.getTestWarnings()[0]);
-  assertEquals('Warning: variable "gl_FragCoord" was not set.  Expected ' +
-               'input of type "varying mediump vec4"',
-               testCase.getTestWarnings()[1]);
-}
+  expectEq(2, testCase.getTestWarnings().length);
+  expectEq('Warning: variable "foo" was not set.  Expected input of type ' +
+           '"invariant varying float"',
+      testCase.getTestWarnings()[0]);
+  expectEq('Warning: variable "gl_FragCoord" was not set.  Expected ' +
+           'input of type "varying mediump vec4"',
+      testCase.getTestWarnings()[1]);
+};

@@ -38,17 +38,27 @@ process.stdout.write = function(arg) {};
 process.stdout.flush = function() {};
 
 /**
+ * @param {number|Array.<number>|string} arg1
+ * @param {string=} arg2
+ * @constructor
+ */
+function Buffer(arg1, arg2) {}
+
+/** @type {number} */
+Buffer.prototype.length;
+
+/**
  * @return {Object}
  */
 function console() {}
 
 /**
- * @param {string} arg
+ * @param {...*} arg
  */
 console.log = function(arg) {};
 
 /**
- * @param {string} arg
+ * @param {...*} arg
  */
 console.error = function(arg) {};
 

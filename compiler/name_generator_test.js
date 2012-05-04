@@ -6,32 +6,46 @@
  */
 
 goog.require('glslunit.compiler.NameGenerator');
-goog.require('goog.testing.jsunit');
 
 
 
-function testNameGenerator() {
-  assertEquals('a', glslunit.compiler.NameGenerator.getShortName(0));
-  assertEquals('_a', glslunit.compiler.NameGenerator.getShortDef(0));
-  assertEquals('b', glslunit.compiler.NameGenerator.getShortName(1));
-  assertEquals('Z', glslunit.compiler.NameGenerator.getShortName(51));
-  assertEquals('ba', glslunit.compiler.NameGenerator.getShortName(53));
-  assertEquals('a0', glslunit.compiler.NameGenerator.getShortName(62 * 52));
-  assertEquals('aaa',
-               glslunit.compiler.NameGenerator.getShortName((62 * 52) + 52));
+/**
+ * Constructor for NameGeneratorTest
+ * @constructor
+ */
+function NameGeneratorTest() {
 }
+registerTestSuite(NameGeneratorTest);
 
 
 
-function testNameGeneratorInstance() {
+/**
+ * Test case testNameGenerator
+ */
+NameGeneratorTest.prototype.testNameGenerator = function() {
+  expectEq('a', glslunit.compiler.NameGenerator.getShortName(0));
+  expectEq('_a', glslunit.compiler.NameGenerator.getShortDef(0));
+  expectEq('b', glslunit.compiler.NameGenerator.getShortName(1));
+  expectEq('Z', glslunit.compiler.NameGenerator.getShortName(51));
+  expectEq('ba', glslunit.compiler.NameGenerator.getShortName(53));
+  expectEq('a0', glslunit.compiler.NameGenerator.getShortName(62 * 52));
+  expectEq('aaa', glslunit.compiler.NameGenerator.getShortName(62 * 52 + 52));
+};
+
+
+
+/**
+ * Test case testNameGeneratorInstance
+ */
+NameGeneratorTest.prototype.testNameGeneratorInstance = function() {
   var generator = new glslunit.compiler.NameGenerator();
   generator.usedKeys_['c'] = true;
-  assertEquals('a', generator.shortenSymbol('foo'));
-  assertEquals('a', generator.shortenSymbol('foo'));
-  assertEquals('b', generator.shortenSymbol('bar'));
+  expectEq('a', generator.shortenSymbol('foo'));
+  expectEq('a', generator.shortenSymbol('foo'));
+  expectEq('b', generator.shortenSymbol('bar'));
   var clone = generator.clone();
-  assertEquals('d', clone.shortenSymbol('raz'));
-  assertEquals('raz', generator.getShortSymbol('raz'));
-  assertEquals(2, generator.getNextNameIndex());
-  assertEquals(4, clone.getNextNameIndex());
-}
+  expectEq('d', clone.shortenSymbol('raz'));
+  expectEq('raz', generator.getShortSymbol('raz'));
+  expectEq(2, generator.getNextNameIndex());
+  expectEq(4, clone.getNextNameIndex());
+};

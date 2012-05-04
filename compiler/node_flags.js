@@ -29,7 +29,8 @@ goog.provide('goog.node.commandLineFlag');
 goog.node.flagType = {
   STRING: 'string',
   STRING_ARRAY: 'string_array',
-  BOOLEAN: 'boolean'
+  BOOLEAN: 'boolean',
+  INTEGER: 'integer'
 };
 
 
@@ -76,8 +77,17 @@ goog.node.commandLineFlag = function(name, type, defaultValue, description) {
 
 
 /**
- * Returns the current value for a command line flag.
- * @return {*} The value of the flag.
+ * Returns additional help information for this type of flag.
+ * @return {string} The help string for this type.
+ */
+goog.node.commandLineFlag.prototype.getTypeHelp = function() {
+  return '';
+};
+
+
+/**
+ * Returns whether or not this flag is required.
+ * @return {boolean} Whether or not the this flag is required.
  */
 goog.node.commandLineFlag.prototype.isRequired = function() {
   return !goog.isDef(this.defaultValue);
@@ -132,10 +142,21 @@ goog.inherits(goog.node.arrayCommandLineFlag,
 
 
 /**
+ * @override
+ */
+goog.node.arrayCommandLineFlag.prototype.getTypeHelp = function() {
+  return 'repeat this option to specify a list of values';
+};
+
+
+/**
  * Sets the current value for this flag.
  * @param {string} value The value of the flag.
  */
 goog.node.arrayCommandLineFlag.prototype.parseValue = function(value) {
+  if (!goog.isDef(this.value)) {
+    this.value = [];
+  }
   if (value.search(',') != -1) {
     this.value.push.apply(this.value, value.split(','));
   } else {
@@ -209,6 +230,29 @@ goog.node.FLAGS.define_bool = function(name, defaultValue, description) {
   goog.node.FLAGS.__defineGetter__(name, function() {
     var flagValue = newFlag.getValue();
     return Boolean(/^[tT]rue$/.test(flagValue));
+  });
+};
+
+
+/**
+ * Defines a new integer flag
+ * @param {string} name The name of this flag.
+ * @param {number|undefined} defaultValue The default value to return if the
+ *     flag has not yet been set.
+ * @param {string} description The description of this flag.
+ */
+goog.node.FLAGS.define_integer = function(name, defaultValue, description) {
+  var newFlag = new goog.node.commandLineFlag(name, goog.node.flagType.INTEGER,
+                                              defaultValue, description);
+  goog.node.FLAGS.definedFlags_[name] = newFlag;
+  goog.node.FLAGS.__defineGetter__(name, function() {
+    var flagValue = newFlag.getValue();
+    if (!/^\d*$/.exec(flagValue)) {
+      console.error('Flag ' + name + ' is not an integer.\n');
+      goog.node.FLAGS.printHelp();
+      process.exit(1);
+    }
+    return parseInt(flagValue, 10);
   });
 };
 
@@ -327,6 +371,10 @@ goog.node.FLAGS.printHelp = function() {
   for (var flagName in goog.node.FLAGS.definedFlags_) {
     var flag = goog.node.FLAGS.definedFlags_[flagName];
     helpString += '  --' + flag.name + ': ' + flag.description;
+    var typeHelp = flag.getTypeHelp();
+    if (typeHelp) {
+      helpString += '\n    ' + typeHelp;
+    }
     if (!flag.isRequired()) {
       helpString += '\n    (default: \'' + flag.defaultValue + '\')\n';
     } else {
@@ -334,5 +382,4 @@ goog.node.FLAGS.printHelp = function() {
     }
   }
   process.stdout.write(helpString + '\n');
-  process.stdout.flush();
 };
