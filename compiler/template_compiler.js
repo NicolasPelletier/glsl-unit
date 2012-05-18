@@ -193,11 +193,11 @@ function main() {
     } else {
       template_source = fs.readFileSync(goog.node.FLAGS.template, 'utf8');
     }
-    shaderProgram.defaultUniformsAndAttributes();
+    shaderProgram.defaultProgramShortNames();
     output = Mustache.to_html(template_source, shaderProgram) + '\n';
     var template = false;
     var template_source = fs.readFileSync(goog.node.FLAGS.template, 'utf8');
-    shaderProgram.defaultUniformsAndAttributes();
+    shaderProgram.defaultProgramShortNames();
     output = Mustache.to_html(template_source, shaderProgram) + '\n';
   } else {
     output =
